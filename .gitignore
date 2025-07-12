@@ -1,0 +1,10 @@
+# Specify filepatterns you want git to ignore.
+**/out/**
+doc
+**/*.sh
+com.txt
+**/*.env
+**/*.ps1
+**/.vscode
+utils
+!.gitkeep
