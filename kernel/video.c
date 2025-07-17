@@ -20,8 +20,7 @@ uint32_t get_res(){
 }
 
 void draw_pixel(uint32_t color, uint16_t x, uint16_t y){
-	WHERE;
-	vram[where] = color;
+	vram[width*y+x] = color;
 }
 
 void fill_rect(uint32_t color, uint16_t x, uint16_t y, uint16_t w, uint16_t h){
@@ -30,20 +29,19 @@ void fill_rect(uint32_t color, uint16_t x, uint16_t y, uint16_t w, uint16_t h){
 	for (cy = 0; cy < h; cy++){
 		for (cx = 0; cx < w; cx++){
 			//SET_PIXEL(buffer,where+cx,r,g,b);
-			*((uint32_t*)(vram+(width*(cy+y)+x+cx))) = color;
+			vram[width*(cy+y)+x+cx] = color;
 		}
 		//where += (width*y)*4;
 	}
 }
 
-void draw_by_font_bitmap(uint8_t bitmap[], uint32_t color, uint16_t x, uint16_t y){
-	WHERE;
+void draw_by_font_bitmap(uint8_t bitmap[] ,uint32_t color, uint16_t x, uint16_t y){
 	uint16_t cx, cy; // cx - current x, cy - current y
 	for (cy = 0; cy <= font_height; cy++){
 		for (cx = 0; cx <= font_width; cx++){
-			//SET_PIXEL(buffer,where+cx,r,g,b);
-			if (bitmap[cy] & (1 << (7-cx))) vram[where+cx] = color;
+			if (bitmap[cy] & (1 << (7-cx))) vram[width*(cy+y)+x+cx] = color;
 		}
-		where += width;
 	}
+	
+	//draw_pixel(color, x+3, y+3);
 }

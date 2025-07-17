@@ -1541,7 +1541,7 @@ static uint8_t tilde[13] = {
 0b00000000,
 };
 
-uint8_t* font_symbol_tab[] = {
+uint8_t* font_symbol_table[] = {
 	space, exclamation, doublequot, numbersign,
 	dollar, percentsign, ampersand, quot,
 	leftparenthesis, rightparenthesis, asterisk, plus,
@@ -1564,12 +1564,12 @@ static uint8_t font_offset_table[1][3] = {
 	{0x20,0x7e,0x20}
 };
 
-const size_t font_symbol_tab_size = sizeof(font_symbol_tab)/sizeof(font_symbol_tab[0]);
-static const size_t font_offset_table_size = sizeof(font_offset_table)/sizeof(font_offset_table[0]);
+size_t font_symbol_table_size = sizeof(font_symbol_table)/sizeof(font_symbol_table[0]);
+static size_t font_offset_table_size = sizeof(font_offset_table)/sizeof(font_offset_table[0]);
 
-const uint8_t font_width = 7;
-const uint8_t font_height = 13;
-const uint8_t font_full_width = 8;
-const uint8_t font_full_height = 15;
+uint8_t font_width = 7;
+uint8_t font_height = 13;
+uint8_t font_full_width = 8;
+uint8_t font_full_height = 15;
 
 #endif

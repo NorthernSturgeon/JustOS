@@ -4,7 +4,8 @@ CFLAGS=-c -I include -nostdlib -ffreestanding \
 	-fomit-frame-pointer -fno-stack-protector \
 	-Wall -Wextra -Werror -static -fPIE \
 	-fno-asynchronous-unwind-tables -m64 \
-	-O0 -mcmodel=large -mno-red-zone -o
+	-mno-sse -mno-sse2 \
+	-O0 -mcmodel=small -mno-red-zone -o
 
 LDFLAGS=-nostdlib -znocombreloc --no-dynamic-linker \
 	-T script.lds -o out/kernel.elf

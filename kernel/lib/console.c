@@ -27,9 +27,11 @@ void printf(char *str, ...){
 	va_list data;
 	va_start(data, str);
 	for (;*str;str++){
+		
 		if (x >= w-font_width) {x = basex; y += font_full_height; continue;}
 		if (y >= h-font_height) {y = basey; basex += 40*font_full_width;}
 		if (basex >= w-font_width) {basey = 0; scrool_flag = TRUE;}
+		
 		if (*str == '\n') {y += font_full_height; continue;}
 		if (*str == '\r') {x = basex; continue;}
 		if (*str == '%') {
@@ -71,8 +73,9 @@ void printf(char *str, ...){
 			printf(out_buffer);
 			continue;
 		}
+		//fill_rect(backcolor,x,y,font_full_width,font_full_height);
 		fill_rect(backcolor,x,y,font_full_width,font_full_height);
-		draw_by_font_bitmap(get_symbol_by_id(font_symbol_tab, *str), forecolor, x, y);
+		draw_by_font_bitmap(get_symbol_by_id(*str), forecolor, x, y);
 		if (scrool_flag){
 			fill_rect(forecolor, 0, y+font_height, w, 1);
 			if (y >= font_full_height) fill_rect(backcolor, 0, y+font_height-font_full_height, w, 1);
@@ -91,7 +94,7 @@ void print(char *str){
 		if (str[i] == '\n') {y += font_full_height; continue;}
 		if (str[i] == '\r') {x = 0; continue;}
 		fill_rect(backcolor,x,y,font_full_width,font_full_height);
-		draw_by_font_bitmap(get_symbol_by_id(font_symbol_tab, str[i]), forecolor, x, y);
+		draw_by_font_bitmap(get_symbol_by_id(str[i]), forecolor, x, y);
 		if (scrool_flag){
 			fill_rect(forecolor, 0, y+font_height, w, 1);
 			if (y >= font_full_height) fill_rect(backcolor, 0, y+font_height-font_full_height, w, 1);

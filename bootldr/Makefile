@@ -19,7 +19,7 @@ vhdinstall:
 	losetup --partscan /dev/loop0 ${VHDINSTALLPATH}
 	mount /dev/loop0p1 /mnt
 	cp out/bootx64.efi /mnt/EFI/Boot
-	sudo umount /dev/loop0p1
+	umount /dev/loop0p1
 	losetup -d /dev/loop0
 
 clear:

@@ -1,6 +1,7 @@
 #ifndef __VIDEO_H__
 #define __VIDEO_H__
 
+//format: 0xwwwwhhhh
 extern uint32_t get_res();
 extern void init_video(void* vram_ptr, uint16_t w, uint16_t h);
 extern void draw_pixel(uint32_t color, uint16_t x, uint16_t y);

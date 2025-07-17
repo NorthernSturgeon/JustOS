@@ -13,6 +13,8 @@
 //                                          6456484032241608
 #define CONV_PTR(p) (void*)(((UINT64)(p))|0xffff800000000000ull)
 
+#define STOP for(;;)
+
 typedef union{
 	UINT64 addr;
 	struct{
@@ -63,8 +65,9 @@ typedef struct __attribute__((__packed__)){
 
 //#define BS_PTZONE_ALLOC
 #define ovmf_r11337
+//#define NATIVE_VIDEOMODE
 
-#define STACK_SIZE 128000
+#define STACK_SIZE 32768
 //                     6347393123150700
 #define MAX_PHY_ADDR 0x00007fffffffffffull
 
@@ -157,7 +160,7 @@ static VOID GetMMap(EFI_MEMORY_DESCRIPTOR **mmap, UINTN *mmapsize,
 	//Print(L"Success! Size=%u\n", *mmapsize);
 }
 
-EFI_STATUS OpenRoot(EFI_HANDLE imgHand, EFI_FILE **file){
+EFI_STATUS OpenRoot(EFI_HANDLE imgHand, EFI_FILE_HANDLE *file){
 	EFI_LOADED_IMAGE_PROTOCOL* loadedImg;
 	uefi_call_wrapper(BS->HandleProtocol, 3, imgHand, &gEfiLoadedImageProtocolGuid, (void**)&loadedImg);
 	
@@ -167,22 +170,11 @@ EFI_STATUS OpenRoot(EFI_HANDLE imgHand, EFI_FILE **file){
 	return uefi_call_wrapper(filesystem->OpenVolume, 2, filesystem, file);
 }
 
-EFI_STATUS LoadFile(EFI_FILE *fileDir, EFI_FILE **file, CHAR16 *filename, EFI_FILE_INFO **fileinfo){
+EFI_STATUS LoadFile(EFI_FILE_HANDLE fileDir, EFI_FILE_HANDLE *file, CHAR16 *filename, EFI_FILE_INFO **fileinfo){
 	register EFI_STATUS status = uefi_call_wrapper(fileDir->Open, 4, fileDir, file, filename, EFI_FILE_MODE_READ, EFI_FILE_READ_ONLY);
 	if (EFI_ERROR(status)) return status;
 
-	UINTN fileinfosz;
-
-	//EFI_FILE_INFO fileVal = *file;
-
-	status = uefi_call_wrapper((*file)->GetInfo, 3, *file, &gEfiFileInfoGuid, &fileinfosz, NULL);
-	if (status != EFI_BUFFER_TOO_SMALL) return status;
-
-	*fileinfo = AllocatePool(fileinfosz);
-	if (!status) return EFI_OUT_OF_RESOURCES;
-
-	status = uefi_call_wrapper((*file)->GetInfo, 3, *file, &gEfiFileInfoGuid, &fileinfosz, fileinfo);
-	if (EFI_ERROR(status)) return status;
+	*fileinfo = LibFileInfo(*file);
 
 	return EFI_SUCCESS;
 }
@@ -215,28 +207,34 @@ EFI_STATUS allocate_ptzone(boot_info_t *boot_info, EFI_MEMORY_DESCRIPTOR *mmap, 
 	return status;
 }
 #endif
-//#define PTZONE_CLEAR_SIZE 33554432
 
 VOID alloc_page(boot_info_t *boot_info, virt_addr_t vaddr, UINT64 *free_ptzonesz, UINT16 pml4offset){
 	page_entry_t *cur_pt, *prev_pt;
 	cur_pt = GET_PTE(boot_info->ptzone[vaddr.f.pml4+pml4offset].value); //get pdt from pml4
 	if (cur_pt == NULL) { //pdt doesn't exists
-		cur_pt = boot_info->ptzone + (boot_info->ptzone_size - (*free_ptzonesz)--)*4096; //create pdt
+		cur_pt = boot_info->ptzone + (boot_info->ptzone_size - (*free_ptzonesz)--)*512; //create pdt
+		//set_color(0x00ff0000, 0x00000000);
+		//printf("PDT: %p %p\r\n", vaddr.addr, cur_pt);
 		boot_info->ptzone[vaddr.f.pml4+pml4offset].value = SET_PTE(cur_pt); //set pdt in pml4
 	}
 	prev_pt = cur_pt; //save current pdt
 	cur_pt = GET_PTE(cur_pt[vaddr.f.pdt].value); //get pd in pdt
 	if (cur_pt == NULL) { //pd doesn't exists
-		cur_pt = boot_info->ptzone + (boot_info->ptzone_size - (*free_ptzonesz)--)*4096; //create pd
+		cur_pt = boot_info->ptzone + (boot_info->ptzone_size - (*free_ptzonesz)--)*512; //create pd
+		//set_color(0x0000ff00, 0x00000000);
+		//printf("PD : %p %p\r\n", vaddr.addr, cur_pt);
 		prev_pt[vaddr.f.pdt].value = SET_PTE(cur_pt); //set pd in pdt
 	}
 	prev_pt = cur_pt; //save current pd
 	cur_pt = GET_PTE(cur_pt[vaddr.f.pd].value); //get pt from pd
 	if (cur_pt == NULL) { //pt doesn't exists
-		cur_pt = boot_info->ptzone + (boot_info->ptzone_size - (*free_ptzonesz)--)*4096; //create pt
+		cur_pt = boot_info->ptzone + (boot_info->ptzone_size - (*free_ptzonesz)--)*512; //create pt
+		//set_color(0x00ffff00, 0x00000000);
+		//printf("PT : %p %p\r\n", vaddr.addr, cur_pt);
 		prev_pt[vaddr.f.pd].value = SET_PTE(cur_pt); //set pt in pd
 	}
 	cur_pt[vaddr.f.pt].value = SET_PTE(vaddr.addr); //set page in pt
+	//if (!(vaddr.addr&(0xFFFFFu))) printf("%p -> %p\r\n", vaddr.addr, cur_pt);
 }
 
 
@@ -266,9 +264,9 @@ VOID setup_paging(boot_info_t *boot_info, EFI_MEMORY_DESCRIPTOR *mmap, UINTN num
 	printf("total memory: %u\r\n", totalsize);
 	printf("PTZONE_SIZE: %u\r\n", boot_info->ptzone_size);
 	printf("PTZONE: %p\r\n", boot_info->ptzone);
-	printf("To clear in PTZONE: %u, true: %u\r\n", totalsize<<4, totalsize<<7); // pages -> bytes (2^12) -> (1^-9)*2
+	printf("To clear in PTZONE: %u\r\n", totalsize<<4); // pages -> bytes (2^12) -> (1^-9)*2
 	printf("Clear PTZONE... ");
-	ZeroMem(boot_info->ptzone, totalsize<<7); //magic!
+	ZeroMem(boot_info->ptzone, totalsize<<4); //fixed 2025-07-15 v0.0.2
 	printf("success!\r\n");
 	boot_info->ptzone_size = totalsize>>8; // (1^-9)*2
 	#endif
@@ -296,22 +294,14 @@ VOID setup_paging(boot_info_t *boot_info, EFI_MEMORY_DESCRIPTOR *mmap, UINTN num
 
 	boot_info->ptzone_size -= free_ptzonesz;
 	printf("PTZONE true size: %u\r\n", boot_info->ptzone_size<<12);
+	boot_info->ptzone = CONV_PTR(boot_info->ptzone);
 	return;
 	error:
 	printf("Out of memory!\r\n");
 	//uefi_call_wrapper(SystemTable->RuntimeServices,4,EfiResetShutdown,EFI_SUCCESS,0,NULL);
 }
 
-EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
-	InitializeLib(ImageHandle, SystemTable);
-	uefi_call_wrapper(ST->ConOut->ClearScreen, 1, ST->ConOut);
-
-	register EFI_STATUS status; //one variable for all
-
-	//set some f
-	boot_info_t *boot_info;
-	status = ALLOC_KPOOL(sizeof(boot_info_t), &boot_info);
-
+VOID setup_acpi(boot_info_t *boot_info){
 	EFI_CONFIGURATION_TABLE *conf_tb = ST->ConfigurationTable;
 
 	EFI_GUID acpi1_guid = ACPI_TABLE_GUID;
@@ -324,6 +314,20 @@ CompareGuid(&conf_tb[i].VendorGuid,&acpi2_guid) == 0){
 		}
 	}
 	if (!boot_info->acpi_rdsp) Fatality(LDR_ACPI, 0);
+}
+
+EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
+	InitializeLib(ImageHandle, SystemTable);
+	uefi_call_wrapper(ST->ConOut->ClearScreen, 1, ST->ConOut);
+
+	register EFI_STATUS status; //one variable for all
+
+	//set some f
+	boot_info_t *boot_info;
+	status = ALLOC_KPOOL(sizeof(boot_info_t), &boot_info);
+
+	setup_acpi(boot_info);
+
 	//get videomode
 	EFI_GRAPHICS_OUTPUT_PROTOCOL *gop;
 
@@ -336,45 +340,56 @@ CompareGuid(&conf_tb[i].VendorGuid,&acpi2_guid) == 0){
 	//Print(L"%p\n", ST->ConfigurationTable);
 
 	EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *info;
-	UINTN SizeOfInfo;//, nativeMode;//, numModes;
+	UINTN SizeOfInfo, nativeMode, numModes;
 
-	status = uefi_call_wrapper(gop->SetMode, 2, gop, 0);
+	//status = uefi_call_wrapper(gop->SetMode, 2, gop, 0);
 	status = uefi_call_wrapper(gop->QueryMode, 4, gop, (gop->Mode==NULL)?0:gop->Mode->Mode, &SizeOfInfo, &info);
 	if(EFI_ERROR(status)) {
 		Fatality(LDR_DISPLAY, 0);
-	} /*else {
-		//nativeMode = gop->Mode->Mode;
-		//status = uefi_call_wrapper(gop->SetMode, 2, gop, nativeMode);
-		//numModes = gop->Mode->MaxMode;
-	}*/
-	//Print(L"nativeMode: %d, numModes: %d\n", nativeMode, numModes);
+	} else {
+		nativeMode = gop->Mode->Mode;
+		status = uefi_call_wrapper(gop->SetMode, 2, gop, nativeMode);
+		numModes = gop->Mode->MaxMode;
+	}
 
+	Print(L"nativeMode: %d, numModes: %d\n", nativeMode, numModes);
+
+	for (UINT32 i=0; i < numModes; i++){
+		status = uefi_call_wrapper(gop->QueryMode, 4, gop, i, &SizeOfInfo, &info);
+		
+		Print(L"D: mode %03d width %d height %d ppl %d format %d\n", i, \
+			info->HorizontalResolution, info->VerticalResolution, \
+			info->PixelsPerScanLine, info->PixelFormat);
+	}
+
+	#ifndef NATIVE_VIDEOMODE
+	status = uefi_call_wrapper(gop->SetMode, 2, gop, 12);
+	status = uefi_call_wrapper(gop->QueryMode, 4, gop, 12, &SizeOfInfo, &info);
+	#else
+	status = uefi_call_wrapper(gop->QueryMode, 4, gop, nativeMode, &SizeOfInfo, &info);
+	#endif
 	boot_info->vram = (VOID*)gop->Mode->FrameBufferBase;
 	boot_info->vram_size = (UINT64)gop->Mode->FrameBufferSize;
 	boot_info->width = (UINT16)info->HorizontalResolution;
 	boot_info->height = (UINT16)info->VerticalResolution;
 	boot_info->format = (UINT16)info->PixelFormat;
 	boot_info->ppl = (UINT16)info->PixelsPerScanLine;
-	/*
-	Print(L"D: mode %03d width %d height %d ppl %d\n", nativeMode, \
-		boot_info->width, \
-		boot_info->height, \
-		boot_info->ppl);
-
+	
 	Print(L"D: video memory at: %p size: %llu\n", boot_info->vram, boot_info->vram_size);
-	*/
+	
 	//load the kernel
 	///open volume
-	EFI_FILE* root;
+	EFI_FILE_HANDLE root;
 	status = OpenRoot(ImageHandle, &root);
 	if (EFI_ERROR(status)) Fatality(LDR_DISK, status);
-	EFI_FILE* k_file;
+	EFI_FILE_HANDLE k_file;
 
 	EFI_FILE_INFO *k_fileinfo;
 	status = LoadFile(root, &k_file, L"\\EFI\\Boot\\kernel.elf", &k_fileinfo);
 	if (EFI_ERROR(status)) Fatality(LDR_FILE, 0);
 
-	UINT64 k_filesz = STACK_SIZE;//k_fileinfo->FileSize
+	Print(L"file size: %llu\n", k_fileinfo->FileSize);
+	UINT64 k_filesz = k_fileinfo->FileSize + STACK_SIZE;
 
 	//Print(L"filesz: %llu\n", k_filesz);
 	///read kernel
@@ -382,8 +397,9 @@ CompareGuid(&conf_tb[i].VendorGuid,&acpi2_guid) == 0){
 	status = ALLOC_KPAGES(&kernel, (k_filesz>>12)+((k_filesz&4095)?1:0));
 	status = uefi_call_wrapper(k_file->Read, 3, k_file, &k_filesz, kernel);
 	FreePool(k_fileinfo);
+	if (EFI_ERROR(status)) Fatality(LDR_FILE, status);
 
-	//Print(L"D: kernel loaded at: %p\n", kernel);
+	Print(L"D: kernel loaded at: %p\n", kernel);
 	
 	///close kernel's file
 	uefi_call_wrapper(k_file->Close, 1, k_file);
@@ -412,15 +428,13 @@ CompareGuid(&conf_tb[i].VendorGuid,&acpi2_guid) == 0){
 
 	init_video(boot_info->vram, boot_info->width, boot_info->height);
 	set_color(0x00ffffff, 0x00000000);
-	fill_rect(0x00ffff00, 100, 100, 100, 100);
+	fill_rect(0x0000ffff, 50, 50, 50, 50);
+	//draw_pixel(0x0000ff00, 1919, 1079);
 	printf("ExitBootServices() - success!\r\n");
 	printf("descriptor size:%u\r\n", descsize);
 	printf("descriptor ver:%u\r\n", descver);
-	//printf("%p\r\n", boot_info->kernel);
-	//print("g\r\n");
-	//print("g");..
 	/*
-	register UINTN i = 0; //strange bug: page fault without register
+	register UINTN i = 0;
 	for (;i < num_entries; i++) {
 		register EFI_MEMORY_DESCRIPTOR *desc = (EFI_MEMORY_DESCRIPTOR*)((UINT8*)mmap+descsize*i);
 		if (desc->Type < EfiMaxMemoryType && desc->NumberOfPages && !(desc->PhysicalStart&4095)){
@@ -437,6 +451,7 @@ CompareGuid(&conf_tb[i].VendorGuid,&acpi2_guid) == 0){
 	status = uefi_call_wrapper(RT->SetVirtualAddressMap, 4, mmapsize, descsize, descver, mmap);
 	boot_info->rtsvcs = SystemTable->RuntimeServices;
 	boot_info->ptzone = CONV_PTR(boot_info->ptzone);
+	//set_color(0x00ffffff, 0x00000000);
 	printf("SetVirtualAddressMap() - %u!\r\n", status);
 
 	//start kernel

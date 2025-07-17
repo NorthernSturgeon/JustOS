@@ -1,6 +1,8 @@
 #ifndef __CONSOLE_H__
 #define __CONSOLE_H__
 /*
+//deprecated
+
 #define BG_BLACK 0x00
 #define BG_BLUE 0x10
 #define BG_GREEN 0x20

@@ -18,11 +18,28 @@
 		add %rdx, %rdi
 		std
 	memmain:
+		cmp $8, %rdx
+		jb memmain3 #count < 8
+		movq %rdi, %r8
+		and $7, %r8
+		jz memmain2 #dest % 8 == 0
+		sub $8, %r8
+		sub %r8, %rdx
+		lea memmain2(%rip), %rcx
+		sub %r8, %rcx
+		jmp *%rcx
+		movsb
+		movsb
+		movsb
+		movsb
+		movsb
+		movsb
+		movsb
+	memmain2:
 		movq %rdx, %rcx
 		shr $3, %rcx
 		rep movsq
-		and $7, %rdx
-		jz memret
+	memmain3:
 		lea memret(%rip), %rcx
 		sub %rdx, %rcx
 		jmp *%rcx
