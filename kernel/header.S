@@ -1,11 +1,14 @@
+.globl boot_info
+.globl kentry
+
 .text
-	.global _asm_ijmp
-
-	_asm_ijmp:
-		jmp .
-	_pre_isr:
-		movq $0, (%rsp)
-		addq $4, %rsp
-	_asm_iret:
-		iretq
-
+	boot_info:
+	.rept 8
+	.quad 0
+	.endr
+	.rept 4
+	.word 0
+	.endr
+	kentry:
+	and $-0x10, %rsp
+	jmp kmain

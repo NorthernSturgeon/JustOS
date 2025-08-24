@@ -1,0 +1,216 @@
+#include "lib/types.h"
+#include "rtsvcs.h"
+#include "lib/memory.h"
+#include "lib/string.h"
+#include "lib/console.h"
+#include "lib/atomic.h"
+
+//(EFI_MEMORY_DESCRIPTOR*)((UINT8*)mmap+descsize*i);
+
+gmrtp_t volatile gmrtp;
+
+static inline size_t div_up(size_t a, size_t b) { return (a+b-1)/b; }
+
+static memory_regions_table* search_table(memory_region_t *region){
+	if (gmrtp.total_tables == 1) return gmrtp.first_table;
+	memory_regions_table *current_table = gmrtp.first_table, *next_table;
+
+	while (current_table->regions[0].physical_start < region->physical_start && \
+	current_table->regions[current_table->used-1].physical_start > region->physical_start){
+		next_table = (memory_regions_table*)current_table->next_table;
+		spin_lock(&next_table->semafore);
+
+		//lazy carring last region to next table
+		if (current_table->used == REGIONS_PER_TABLE && next_table->used != REGIONS_PER_TABLE){
+			memmove(&next_table->regions[1], &next_table->regions[0], (next_table->used++)*sizeof(memory_region_t));
+			next_table->regions[0] = current_table->regions[--(current_table->used)];
+		}
+
+		spin_unlock(&current_table->semafore);
+		current_table = next_table;
+	}
+}
+
+void remove_region(memory_regions_table* table, uint8_t start_idx, size_t count){
+	memmove(&table->regions[start_idx], &table->regions[start_idx+count], (table->used-count)*sizeof(memory_region_t));
+	table->used -= count;
+}
+
+void insert_region(memory_regions_table* table, memory_region_t* region, uint8_t target_idx){
+	ptrdiff_t diff = region->physical_start+region->number_of_pages*4096 - table->regions[target_idx+1].physical_start;
+	if (table->regions[target_idx+1].number_of_pages > diff) {
+		memmove(&table->regions[target_idx+1], &table->regions[target_idx], (table->used-target_idx)*sizeof(memory_region_t));
+		table->used++;
+	} else {
+		re
+	}
+
+	table->regions[target_idx] = *region;
+
+	
+	table->regions[target_idx+1].physical_start += diff;
+	table->regions[target_idx+1].number_of_pages -= diff/4096; //TODO: fix diff > number_of_pages
+
+	if ()
+}
+
+void modify_region(memory_region_t *region){
+	spin_lock(&gmrtp.first_table->semafore);
+	memory_regions_table *table = search_table(region);
+
+	uint8_t l = 0, r = table->used - 1, c = (r - 1) / 2;
+	while (table->regions[c].physical_start != region->physical_start){
+		if (table->regions[c].physical_start > region->physical_start) r = c - 1;
+		else l = c + 1;
+		c = (r - l)/2;
+	}
+
+	insert_region(table, region, c);
+	spin_unlock(&table->semafore);
+}
+
+//void create_region(memory_region_t *region)
+//void delete_region(memory_region_t *region)
+//void* allocate_pages(size_t num, memory_region_type type, uint32_t attrib)
+//void* free_pages(void* ptr)
+//#define calloc(num, size) memset(malloc(num*size))
+
+static inline memory_region_type efimemtypeconvert(EFI_MEMORY_TYPE memtype){
+	switch (memtype){
+	case EfiReservedMemoryType:
+		return RegionReservedMemory;
+	case EfiRuntimeServicesCode:
+		return RegionFirmwareCode;
+	case EfiRuntimeServicesData:
+		return RegionFirmwareData;
+	case EfiConventionalMemory:
+		return RegionAvailableMemory;
+	case EfiUnusableMemory:
+		return RegionUnusableMemory;
+	case EfiACPIReclaimMemory:
+		return RegionACPIReclaimMemory;
+	case EfiACPIMemoryNVS:
+		return RegionACPINVS;
+	case EfiMemoryMappedIO:
+		return RegionMMIO;
+	case EfiMemoryMappedIOPortSpace:
+		return RegionMMIOPS;
+	case EfiPalCode:
+		return RegionPalCode;
+	default:
+		return RegionReservedMemory;
+	}
+}
+
+void init_mm(void* desc_list, size_t desc_count, uint64_t desc_size){
+	#define mdescptr_by_idx(x) ((EFI_MEMORY_DESCRIPTOR*)((uint8_t*)desc_list+desc_size*(x)))
+
+	//sort desc_list (insertion sort)
+	bool individual_desc_list = false;
+	size_t universal_counter = 0; //counts bad descriptors
+	for (int64_t i = 0; i < (int64_t)desc_count; i++){
+		EFI_MEMORY_DESCRIPTOR *tempptr = mdescptr_by_idx(i);
+		//is it bad descriptor?
+		if (tempptr->PhysicalStart&0xFFF || tempptr->NumberOfPages == 0 \
+		|| (tempptr->Type >= EfiMaxMemoryType && tempptr->Type < 0x70000000)){
+			printf("init_mm: bad %p %u\n", tempptr->PhysicalStart, i);
+			tempptr->PhysicalStart = BAD_POINTER;
+			universal_counter++;
+		//does desc_list have its own memory area?
+		} else if (phys_to_virt(tempptr->PhysicalStart) == desc_list && tempptr->NumberOfPages == div_up(desc_size, 4096)){
+			individual_desc_list = true;
+		//following 4 memory types are no longer needed
+		} else if (tempptr->Type == EfiLoaderData || tempptr->Type == EfiLoaderCode \
+		|| tempptr->Type == EfiBootServicesData || tempptr->Type == EfiBootServicesCode){
+			tempptr->Type = EfiConventionalMemory;
+		}
+		EFI_MEMORY_DESCRIPTOR temp = *tempptr;
+		int64_t j = i-1;
+		for (;j >= 0 && mdescptr_by_idx(j)->PhysicalStart > temp.PhysicalStart; j--) *mdescptr_by_idx(j+1) = *mdescptr_by_idx(j);
+		*mdescptr_by_idx(j+1) = temp;
+	}
+	//select place for region_desc_table(s)
+	printf("init_mm: bad descriptors: %u\n", universal_counter);
+	desc_count -= universal_counter;
+	size_t memory_needed = div_up(desc_count, REGIONS_PER_TABLE);
+	printf("init_mm: pages needed before merging: %u\n", memory_needed);
+
+	universal_counter = 0; //counts merged descriptors
+	memory_regions_table *first_table = NULL;
+	if (individual_desc_list && desc_list >= phys_to_virt((1<<20)) && desc_size >= 40) first_table = desc_list;
+	for (size_t i = 0; i < desc_count; i++){
+		EFI_MEMORY_DESCRIPTOR *tempptr = mdescptr_by_idx(i);
+		size_t j = i+1;
+		for (;j < desc_count && tempptr->Type == mdescptr_by_idx(j)->Type; j++){
+			tempptr->NumberOfPages += mdescptr_by_idx(j)->NumberOfPages;
+			mdescptr_by_idx(j)->NumberOfPages = 0;
+			universal_counter++;
+		}
+		if (!first_table && tempptr->Type == EfiConventionalMemory && tempptr->PhysicalStart >= (1<<20) && tempptr->NumberOfPages >= memory_needed){
+			first_table = phys_to_virt(tempptr->PhysicalStart);
+		}
+		i = j-1;
+	}
+	if (!first_table){
+		printf("init_mm: FATAL: insufficient memory.%u\n");
+		for(;;);
+	}
+
+	memory_needed = div_up(desc_count-universal_counter, REGIONS_PER_TABLE);
+	printf("init_mm: pages needed after merging: %u\n", memory_needed);
+
+	//convert desc_list to region_desc_table(s)
+	memory_regions_table *current_table = first_table;
+	current_table->used = 0;
+	current_table->semafore = 0;
+	uint64_t min_size, max_size;
+	for (size_t i = 0; i < desc_count; i++){
+		if (current_table->used == 0){
+			current_table->semafore = 0;
+			current_table->next_table = NULL;
+			min_size = __UINT64_MAX__;
+			max_size = 0;
+			//both == __UINT8_MAX__ => no RegionAvailableMemory in table
+			current_table->min_size_idx = __UINT8_MAX__;
+			current_table->max_size_idx = __UINT8_MAX__;
+		}
+		EFI_MEMORY_DESCRIPTOR temp = *mdescptr_by_idx(i);
+		if (temp.NumberOfPages == 0) continue;
+		memory_region_t *current_desc = &(current_table->regions[(current_table->used)++]);
+		current_desc->number_of_pages = temp.NumberOfPages;
+		current_desc->physical_start = (void*)temp.PhysicalStart;
+		current_desc->region_type = efimemtypeconvert(temp.Type);
+		//TODO: region attributes
+		if (current_desc->region_type == RegionAvailableMemory){
+			if (current_desc->number_of_pages <= min_size){
+				current_table->min_size_idx = current_table->used-1;
+				min_size = current_desc->number_of_pages;
+			} else if (current_desc->number_of_pages >=max_size){
+				current_table->max_size_idx = current_table->used-1;
+				min_size = current_desc->number_of_pages;
+			}
+		}
+		printf("region %p %u\n", current_desc->physical_start, current_desc->number_of_pages);
+		if (current_table->used == REGIONS_PER_TABLE-1 && current_table-first_table < (int64_t)memory_needed){
+			current_table->next_table = current_table+1;
+			current_table++;
+			current_table->used = 0;
+		};
+	}
+	gmrtp.first_table = first_table;
+	gmrtp.total_tables = memory_needed;
+	gmrtp.semafore1 = 0;
+	gmrtp.semafore2 = 0;
+
+	memory_region_t upd = {
+		.physical_start = first_table,
+		.number_of_pages = memory_needed,
+		.region_type = RegionTables,
+		.attributes = 0
+	};
+
+	if (first_table == desc_list){
+		modify_region(&upd);
+	} 
+	#undef mdescptr_by_idx
+}

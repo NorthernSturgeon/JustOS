@@ -1541,23 +1541,23 @@ static uint8_t tilde[13] = {
 0b00000000,
 };
 
-uint8_t* font_symbol_table[] = {
-	space, exclamation, doublequot, numbersign,
-	dollar, percentsign, ampersand, quot,
-	leftparenthesis, rightparenthesis, asterisk, plus,
-	comma, minus, period, slash,
-	zero, one, two, three, four, five,
-	six, seven, eight, nine, colon, semicolon, 
-	less, equal, greater, question,
-	at, A, B, C, D, E, F, G, H,
-	I, J, K, L, M, N, O, P, Q,
-	R, S, T, U, V, W, X, Y, Z,
-	leftbracket, backslash, rightbracket, caret, underscore, apostrophe,
-	a, b, c, d, e, f, g, h,
-	i, j, k, l, m, n, o, p,
-	q, r, s, t, u, v, w, x, y, z,
-	leftbrace, bar, rightbrace, tilde,
-	undefined
+volatile void* font_symbol_table[] = {
+	&space, &exclamation, &doublequot, &numbersign,
+	&dollar, &percentsign, &ampersand, &quot,
+	&leftparenthesis, &rightparenthesis, &asterisk, &plus,
+	&comma, &minus, &period, &slash,
+	&zero, &one, &two, &three, &four, &five,
+	&six, &seven, &eight, &nine, &colon, &semicolon,
+	&less, &equal, &greater, &question,
+	&at, &A, &B, &C, &D, &E, &F, &G, &H,
+	&I, &J, &K, &L, &M, &N, &O, &P, &Q,
+	&R, &S, &T, &U, &V, &W, &X, &Y, &Z,
+	&leftbracket, &backslash, &rightbracket, &caret, &underscore, &apostrophe,
+	&a, &b, &c, &d, &e, &f, &g, &h,
+	&i, &j, &k, &l, &m, &n, &o, &p,
+	&q, &r, &s, &t, &u, &v, &w, &x, &y, &z,
+	&leftbrace, &bar, &rightbrace, &tilde,
+	&undefined
 };
 
 static uint8_t font_offset_table[1][3] = {
@@ -1567,9 +1567,9 @@ static uint8_t font_offset_table[1][3] = {
 size_t font_symbol_table_size = sizeof(font_symbol_table)/sizeof(font_symbol_table[0]);
 static size_t font_offset_table_size = sizeof(font_offset_table)/sizeof(font_offset_table[0]);
 
-uint8_t font_width = 7;
-uint8_t font_height = 13;
-uint8_t font_full_width = 8;
-uint8_t font_full_height = 15;
+uint16_t font_width = 7;
+uint16_t font_height = 13;
+uint16_t font_full_width = 8;
+uint16_t font_full_height = 15;
 
 #endif

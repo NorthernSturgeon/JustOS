@@ -1,6 +1,8 @@
 #ifndef __RTSVCS_H__
 #define __RTSVCS_H__
 
+#define ovmf_r11337
+
 #define EFI_ERROR(a)(((int64_t)a)<0)
 #define EFIERR(a)(0x8000000000000000|a)
 
@@ -67,6 +69,32 @@ typedef struct {
 #define EFI_TIME_IN_DAYLIGHT        0x02
 #define EFI_UNSPECIFIED_TIMEZONE    0x07FF
 
+typedef enum {
+    EfiReservedMemoryType,
+    EfiLoaderCode,
+    EfiLoaderData,
+    EfiBootServicesCode,
+    EfiBootServicesData,
+    EfiRuntimeServicesCode,
+    EfiRuntimeServicesData,
+    EfiConventionalMemory,
+    EfiUnusableMemory,
+    EfiACPIReclaimMemory,
+    EfiACPIMemoryNVS,
+    EfiMemoryMappedIO,
+    EfiMemoryMappedIOPortSpace,
+    EfiPalCode,
+    EfiMaxMemoryType
+} EFI_MEMORY_TYPE;
+
+#ifdef ovmf_r11337
+#define KERNEL_MEMORY_TYPE EfiRuntimeServicesData
+#define PTZONE_MEMORY_TYPE KERNEL_MEMORY_TYPE
+#else
+#define KERNEL_MEMORY_TYPE 0x80000000
+#define PTZONE_MEMORY_TYPE 0x80000001
+#endif
+
 typedef struct {
 	uint32_t Type; // Field size is 32 bits followed by 32 bit pad
 	uint32_t Pad;
@@ -129,7 +157,7 @@ typedef int64_t (__attribute__((ms_abi)) *EFI_SET_VARIABLE) (
 typedef struct {
 	uint32_t Resolution; // 1e-6 parts per million
 	uint32_t Accuracy; // hertz
-	bool SetsToZero; // Set clears sub-second time
+	uint8_t SetsToZero; // Set clears sub-second time
 } EFI_TIME_CAPABILITIES;
 
 
@@ -143,13 +171,13 @@ typedef int64_t (__attribute__((ms_abi)) *EFI_SET_TIME) (
 );
 
 typedef int64_t (__attribute__((ms_abi)) *EFI_GET_WAKEUP_TIME) (
-	bool *Enabled,
-	bool *Pending,
+	uint8_t *Enabled,
+	uint8_t *Pending,
 	EFI_TIME *Time
 );
 
 typedef int64_t (__attribute__((ms_abi)) *EFI_SET_WAKEUP_TIME) (
-	bool Enable,
+	uint8_t Enable,
 	EFI_TIME *Time
 );
 

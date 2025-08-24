@@ -3,8 +3,8 @@ include ../local.env
 CFLAGS=-c -I include -nostdlib -ffreestanding \
 	-fomit-frame-pointer -fno-stack-protector \
 	-Wall -Wextra -Werror -static -fPIE \
-	-fno-asynchronous-unwind-tables -m64 \
-	-mno-sse -mno-sse2 \
+	-fno-asynchronous-unwind-tables -include lib/types.h \
+	-march=x86-64 -std=c17 -fno-tree-vrp -mstackrealign \
 	-O0 -mcmodel=small -mno-red-zone -o
 
 LDFLAGS=-nostdlib -znocombreloc --no-dynamic-linker \
@@ -27,7 +27,8 @@ vhdinstall:
 
 build-all:
 	@as lib/mem.S -64 -o out/lib.mem.s.o
-	@as lib/byteorder.S -64 -o out/lib.byteorder.s.o
+	@as lib/atomic.S -64 -o out/lib.atomic.s.o
+	@#gcc lib/memory.c $(CFLAGS) out/lib.memory.c.o
 	@gcc lib/console.c $(CFLAGS) out/lib.console.c.o
 	@#gcc lib/crc32.c $(CFLAGS) out/lib.crc32.c.o
 	@gcc lib/font.c $(CFLAGS) out/lib.font.c.o
@@ -41,7 +42,6 @@ build-all:
 
 link-all:
 	@ld $(LDFLAGS) out/header.s.o out/kernel.c.o \
-		out/lib.mem.s.o out/lib.font.c.o \
-		out/video.c.o out/lib.console.c.o \
-		out/lib.byteorder.s.o
+		out/lib.mem.s.o out/lib.atomic.s.o \
+		out/lib.font.c.o out/video.c.o out/lib.console.c.o 
 	@echo all built successfully!

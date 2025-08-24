@@ -40,10 +40,14 @@
 #define COLOR(BG, FT) (BG|FT)
 */
 
-//extern void scroll(uint8_t count);
+struct console_info{
+	uint16_t width;
+	uint16_t height;
+	uint8_t column_width;
+};
 
+extern struct console_info get_console_info(void);
 extern void set_color(uint32_t fc, uint32_t bc);
-extern void print(char *string);
 extern void printf(char *str, ...);
 
 #endif

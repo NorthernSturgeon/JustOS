@@ -1,6 +1,6 @@
 #include "lib/types.h"
 #include "lib/font.h"
-//#include "lib/mem.h"
+#include "video.h"
 
 static uint32_t volatile *vram = NULL;
 static uint16_t width, height;
@@ -15,8 +15,11 @@ void init_video(void* vram_ptr, uint16_t w, uint16_t h){
 	//format = format;
 }
 
-uint32_t get_res(){
-	return (((uint32_t)width)<<16)+height;
+struct screen_resolution get_res(){
+	struct screen_resolution sr;
+	sr.width = width;
+	sr.height = height;
+	return sr;
 }
 
 void draw_pixel(uint32_t color, uint16_t x, uint16_t y){
@@ -36,9 +39,9 @@ void fill_rect(uint32_t color, uint16_t x, uint16_t y, uint16_t w, uint16_t h){
 }
 
 void draw_by_font_bitmap(uint8_t bitmap[] ,uint32_t color, uint16_t x, uint16_t y){
-	uint16_t cx, cy; // cx - current x, cy - current y
-	for (cy = 0; cy <= font_height; cy++){
-		for (cx = 0; cx <= font_width; cx++){
+	// cx - current x, cy - current y
+	for (uint16_t cy = 0; cy <= font_height; cy++){
+		for (uint16_t cx = 0; cx <= font_width; cx++){
 			if (bitmap[cy] & (1 << (7-cx))) vram[width*(cy+y)+x+cx] = color;
 		}
 	}

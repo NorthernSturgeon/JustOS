@@ -1,16 +1,3 @@
-#ifndef __MEMORY_H__
-#define __MEMORY_H__
-
-#include "lib/types.h"
-
-//                        BADPOINTERBADPTR
-#define BAD_POINTER     0xBAD90187E2BAD972
-#define EFI_BAD_POINTER 0xFBFBFBFBFBFBFBFB
-#define memmask         0xFFFF800000000000ull
-
-#define phys_to_virt(ptr) ((void*)((uint64_t)(ptr)|memmask))
-#define virt_to_phys(ptr) ((void*)((uint64_t)(ptr)&~memmask))
- 
 #define MEMORY_BITMAP_PRESENT   0x1u
 #define MEMORY_BITMAP_RW        0x2u
 #define MEMORY_BITMAP_US        0x4u
@@ -35,17 +22,5 @@
 #define MEMORY_BITMAP_PMEM      (1u<<21)
 #define MEMORY_BITMAP_COW       (1u<<22)
 #define MEMORY_BITMAP_GUARD     (1u<<23)
+#define MEMORY_BITMAP_FIRMWARE  (1u<<23)
 #define MEMORY_BITMAP_VALID     (1u<<31)
-
-typedef struct{ //global memory region table pointer
-	uint32_t *bitmap;
-	uint64_t rle_ptr:48;
-	uint64_t rcu_counter:16;
-} gmrtp_t;
-
-extern gmrtp_t volatile gmrtp;
-
-extern void init_mm(uint32_t* bitmap, size_t bitmap_size);
-//extern void* alloc_pages(size_t num, uint32_t attr);
-
-#endif

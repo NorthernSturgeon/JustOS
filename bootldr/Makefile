@@ -1,12 +1,12 @@
 include ../local.env
 
 CFLAGS:=-c -I /usr/local/include/efi \
-	-ffreestanding -mabi=sysv \
+	-ffreestanding -mabi=sysv -Os \
 	-I /usr/local/include/efi/x86_64 \
 	-I /usr/local/include/efi/protocol \
 	-fno-stack-protector -fshort-wchar \
 	-mno-red-zone -Wall -Wextra -Werror \
-	-fpic -DEFI_FUNCTION_WRAPPER -ggdb
+	-fpic -Wno-maybe-uninitialized -DEFI_FUNCTION_WRAPPER
 
 LDFLAGS:=-nostdlib -znocombreloc \
 	-T /usr/local/lib/elf_x86_64_efi.lds \

@@ -1,9 +1,16 @@
-.globl _memcpy
-.globl _memset
-.globl _memmove
+.globl memcpy
+.globl memset
+.globl memmove
 
 .text
-	_memmove:
+	memcpy:
+		endbr64
+		movq %rdi, %rax
+		test %rdi, %rsi
+		cld
+		jne memmain
+		ret
+	memmove:
 		endbr64
 		movq %rdi, %rax
 		test %rdi, %rsi
@@ -53,15 +60,11 @@
 	memret:
 		cld
 		ret
-	_memcpy:
+	memset:
 		endbr64
 		movq %rdi, %rax
-		test %rdi, %rsi
-		je memret
-		cld
-		jmp memmain
-	_memset:
-		endbr64
+		test %rdi, %rdi
+		jz memset2
 		test %rdx, %rdx
 		jz memset2
 		cld
