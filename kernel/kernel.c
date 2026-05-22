@@ -1,10 +1,10 @@
 #include "lib/types.h"
 #include "lib/console.h"
+#include "lib/memory.h"
 #include "rtsvcs.h"
 #include "boot.h"
 #include "lib/font.h"
 #include "video.h"
-//#include "lib/memory.h"
 //#include "register.h"
 
 extern void _asm_ijmp(void);
@@ -52,36 +52,68 @@ static const char* memtypeconvert(EFI_MEMORY_TYPE memtype){
 }
 */
 
+const boot_info_t *boot_info;
+
 void kmain(){
-	init_video(boot_info.vram, boot_info.width, boot_info.height);
-	void *kernel = (void*)&boot_info;
-	init_kernel_font(kernel-4096);
-	fill_rect(0, 0, 0, boot_info.width-1, boot_info.height-1);
+	init_kernel_font((void*)boot_info);
+	init_video(boot_info->vram, boot_info->width, boot_info->height, boot_info->ppl, boot_info->format);
+	fill_rect(0, 0, 0, boot_info->width-1, boot_info->height-1);
 	/*
 	itdr.limit = 4095;
-	itdr.base = boot_info.ptzone + boot_info.ptzone_size*4096 + 8192;
+	itdr.base = (void*)boot_info - 4096;
 	asm volatile ("lidt %0" : : "m"(itdr));
 	*/
-	set_color(0x00ffffff, 0x00000000);
+	set_color(COLOR_WHITE, COLOR_BLACK);
 
 	//cr0_t cr0;
 	//read_reg(cr0.value, cr0);
 
 	printf("Hello from kernel!\n");
-	printf("BTinfo: %p\n", &boot_info);
-	printf("RTsvcs: %p\n", boot_info.rtsvcs);
-	printf("ACPIrp: %p\n", boot_info.acpi_rdsp);
-	printf("PTZONE: %p\n", boot_info.ptzone);
-	printf("PTZ_sz: %u\n", boot_info.ptzone_size);
-	printf("BMAP  : %p\n", boot_info.bitmap);
-	printf("BMAPsz: %u\n", boot_info.bitmap_size);
-	printf("VRAM  : %p\n", boot_info.vram);
-	printf("VRAMsz: %u\n", boot_info.vram_size);
+	printf("BT1n0o: %p\n", boot_info);
+	printf("RTsvcs: %p\n", boot_info->rtsvcs);
+	printf("ACPIrp: %p\n", boot_info->acpi_rdsp);
+	printf("PTZONE: %p\n", boot_info->ptzone);
+	printf("PTZ_sz: %u\n", boot_info->ptzone_size);
+	printf("MMAP  : %p\n", boot_info->mmap);
+	printf("MMAPsz: %u\n", boot_info->mmap_len);
+	printf("VRAM  : %p\n", boot_info->vram);
+	printf("VRAMsz: %u\n", boot_info->vram_size);
+	printf("videoformat: %ux%u %u\n", (uint64_t)boot_info->width, (uint64_t)boot_info->height, (uint64_t)boot_info->format);
 
-	//init_mm(boot_info.desc_list, boot_info.desc_size/boot_info.size, boot_info.size);
+/*
+	set_color(COLOR_GRAY, COLOR_BLACK);
+	printf("base             | lenght           | type | attr\n");
+	for(size_t i=0; i < boot_info->mmap_len; i++){
+		printf("%p | %p | %u    | %u\n" , boot_info->mmap[i].base, boot_info->mmap[i].lenght, boot_info->mmap[i].type, boot_info->mmap[i].attr);
+	}
+
+	set_color(COLOR_WHITE, COLOR_BLACK);
+*/
+	printf("Initializing memory manager...\n");
+	init_mm();
+
+	set_color(COLOR_GRAY, COLOR_BLACK);
+	printf("base             | lenght           | type | attr\n");
+	for(size_t i=0; i < e820_len; i++){
+		printf("%p | %p | %u    | %u\n" , e820[i].base, e820[i].lenght, e820[i].type, e820[i].attr);
+	}
+
+	set_color(COLOR_WHITE, COLOR_BLACK);
+	printf("gorl: \n");
+	for (size_t i = 0; i < gorl.lenght; i++){
+		set_color(0x00ff7f7f, 0);
+		printf("%p", gorl.list[i++]);
+
+		set_color(COLOR_WHITE, 0);
+		printf(" - ");
+
+		set_color(0x007f7fff, 0);
+		printf("%p\n", gorl.list[i]);
+	}
+
 	//printf("reg ft: %p\n", gmrtp.first_table);
 
 	for(;;);
 	//_asm_ijmp();
-	//boot_info.rtsvcs->ResetSystem(EfiResetShutdown, EFI_SUCCESS, 0, NULL);
+	//boot_info->rtsvcs->ResetSystem(EfiResetShutdown, EFI_SUCCESS, 0, NULL);
 }

@@ -2,7 +2,7 @@
 
 void init_kernel_font(void* kernel){
 	for (size_t i = 0; i < font_symbol_table_size; i++){
-		font_symbol_table[i] += (uint64_t)kernel + 4096;
+		font_symbol_table[i] += (uint64_t)kernel;
 	}
 }
 

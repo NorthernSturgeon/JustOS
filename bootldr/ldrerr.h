@@ -8,5 +8,6 @@
 #define LDR_GOP 5
 #define LDR_MEM 6
 #define LDR_FILE 8
+#define LDR_CFG 9
 
 #endif

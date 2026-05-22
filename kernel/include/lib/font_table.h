@@ -3,9 +3,6 @@
 
 #include "font.h"
 
-typedef unsigned char uint8_t;
-typedef unsigned long size_t;
-
 static uint8_t zero[13] = {
 0b00111000,
 0b01000100,
@@ -1560,6 +1557,7 @@ volatile void* font_symbol_table[] = {
 	&undefined
 };
 
+// min max addend
 static uint8_t font_offset_table[1][3] = {
 	{0x20,0x7e,0x20}
 };

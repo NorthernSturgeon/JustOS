@@ -9,16 +9,20 @@
 		mov %rcx, %cr3 # bye, efi paging
 		# enable SSE support
 		mov %cr0, %rax
-		mov $0, %rcx
+
+		xor %rcx, %rcx
 		not %rcx
 		xor $0b1100, %rcx
+
 		and %rcx, %rax
 		or $2, %rax
 		mov %rax, %cr0
 		mov %cr4, %rax
-		mov $0, %rcx
+
+		xor %rcx, %rcx
 		not %rcx
 		xor $0b10000000000, %rcx
+		
 		and %rcx, %rax
 		or $0b1000000000, %rax
 		mov %rax, %cr4
@@ -42,6 +46,7 @@
 #		movq $0x00C092000000FFFF, 16(%rsp)
 #		movq $0x00A0FA000000FFFF, 24(%rsp)
 #		movq $0x00C0F2000000FFFF, 32(%rsp)
+
 		movabs $0x00C0F2000000FFFF, %rax
 		pushq %rax
 		movabs $0x00A0FA000000FFFF, %rax

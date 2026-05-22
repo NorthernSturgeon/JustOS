@@ -2,7 +2,7 @@
 .globl kentry
 
 .text
-	boot_info:
+	__boot_info:
 	.rept 8
 	.quad 0
 	.endr
@@ -11,4 +11,6 @@
 	.endr
 	kentry:
 	and $-0x10, %rsp
+	lea __boot_info(%rip), %rax
+	mov %rax, boot_info(%rax)
 	jmp kmain

@@ -48,6 +48,6 @@ struct console_info{
 
 extern struct console_info get_console_info(void);
 extern void set_color(uint32_t fc, uint32_t bc);
-extern void printf(char *str, ...);
+extern void printf(const char *str, ...);
 
 #endif

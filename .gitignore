@@ -6,5 +6,7 @@ com.txt
 **/*.env
 **/*.ps1
 **/.vscode
+biosld
+biosld/**
 utils
 !.gitkeep

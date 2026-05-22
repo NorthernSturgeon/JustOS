@@ -1,7 +1,7 @@
 #ifndef __MEMORY_H__
 #define __MEMORY_H__
 
-#include "lib/types.h"
+#include <stdatomic.h>
 
 //                        BADPOINTERBADPTR
 #define BAD_POINTER     0xBAD90187E2BAD972
@@ -11,41 +11,42 @@
 #define phys_to_virt(ptr) ((void*)((uint64_t)(ptr)|memmask))
 #define virt_to_phys(ptr) ((void*)((uint64_t)(ptr)&~memmask))
  
-#define MEMORY_BITMAP_PRESENT   0x1u
-#define MEMORY_BITMAP_RW        0x2u
-#define MEMORY_BITMAP_US        0x4u
-#define MEMORY_BITMAP_WT        0x8u
-#define MEMORY_BITMAP_CD        0x10u
-#define MEMORY_BITMAP_PAT       0x20u
-#define MEMORY_BITMAP_GLOBAL    0x40u
-#define MEMORY_BITMAP_NX        0x80u
-#define MEMORY_BITMAP_MTRR_UC   0x100u
-#define MEMORY_BITMAP_MTRR_WC   0x200u
-#define MEMORY_BITMAP_MTRR_WT   0x400u
-#define MEMORY_BITMAP_MTRR_WP   0x800u
-#define MEMORY_BITMAP_MTRR_WB   0x1000u
-#define MEMORY_BITMAP_PAT_UC    0x2000u
-#define MEMORY_BITMAP_PAT_WC    0x4000u
-#define MEMORY_BITMAP_PAT_WT    0x8000u
-#define MEMORY_BITMAP_PAT_WP    (1u<<16)
-#define MEMORY_BITMAP_PAT_WB    (1u<<17)
-#define MEMORY_BITMAP_PAT_UCD   (1u<<18) //UC-
-#define MEMORY_BITMAP_ALLOCATED (1u<<19)
-#define MEMORY_BITMAP_HUGE      (1u<<20)
-#define MEMORY_BITMAP_PMEM      (1u<<21)
-#define MEMORY_BITMAP_COW       (1u<<22)
-#define MEMORY_BITMAP_GUARD     (1u<<23)
-#define MEMORY_BITMAP_VALID     (1u<<31)
+#ifndef __E820_H__
+#define __E820_H__
 
-typedef struct{ //global memory region table pointer
-	uint32_t *bitmap;
-	uint64_t rle_ptr:48;
-	uint64_t rcu_counter:16;
-} gmrtp_t;
+typedef struct __packed{
+	uint64_t base;
+	uint64_t lenght;
+	uint32_t type;
+	uint32_t attr;
+} e820_entry_t;
 
-extern gmrtp_t volatile gmrtp;
+#define E820_TYPE_USABLE 1
+#define E820_TYPE_RESERVED 2
+#define E820_TYPE_ACPI_RECLAIM 3
+#define E820_TYPE_ACPI_NVS 4
+#define E820_TYPE_UNUSABLE 5
 
-extern void init_mm(uint32_t* bitmap, size_t bitmap_size);
+#define E820_ATTR_ACPI30_NV 0x2
+
+#endif
+
+//extern void* strcmpa(size_t size);
+
+extern e820_entry_t *e820;
+extern size_t e820_len;
+
+//global occupied region list
+typedef struct{
+	uint64_t *list; //atomic
+	uint64_t volatile lenght;
+	uint64_t rwlock;
+	uint64_t volatile *table;
+} gorl_t;
+
+extern gorl_t gorl;
+
+extern void init_mm();
 //extern void* alloc_pages(size_t num, uint32_t attr);
 
 #endif

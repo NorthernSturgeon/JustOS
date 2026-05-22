@@ -4,9 +4,9 @@
 //#define SAFE_MEMCPY
 
 extern void* memset(void* dest, char c, size_t n);
-extern void* memmove(void* dest, void* src, size_t n);
+extern void* memmove(void* dest, const void* src, size_t n);
 #ifndef SAFE_MEMCPY
-extern void* memcpy(void* dest, void* src, size_t n);
+extern void* memcpy(void* dest, const void* src, size_t n);
 #else
 #define memcpy(dest, src, n) memmove(dest, src, n);
 #endif

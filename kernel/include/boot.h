@@ -1,13 +1,15 @@
 #ifndef __BOOTINFO_H__
 #define __BOOTINFO_H__
 
+#include "rtsvcs.h"
+
 typedef struct __packed{
 	rtsvcs_t *rtsvcs;
 	void *acpi_rdsp;
 	void *ptzone;
 	uint64_t ptzone_size;
-	void *bitmap;
-	uint64_t bitmap_size;
+	e820_entry_t *mmap;
+	uint64_t mmap_len;
 	void *vram;
 	uint64_t vram_size;
 	uint16_t width;
@@ -16,6 +18,6 @@ typedef struct __packed{
 	uint16_t ppl;
 } boot_info_t;
 
-extern const boot_info_t boot_info;
+extern const boot_info_t *boot_info;
 
 #endif

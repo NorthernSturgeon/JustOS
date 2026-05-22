@@ -9,12 +9,13 @@
 		test %rdi, %rsi
 		cld
 		jne memmain
+	memret2:
 		ret
 	memmove:
 		endbr64
 		movq %rdi, %rax
 		test %rdi, %rsi
-		je memret
+		je memret2
 		add %rdx, %rsi
 		cmp %rsi, %rdi
 		jb memmove2
@@ -27,22 +28,6 @@
 	memmain:
 		cmp $8, %rdx
 		jb memmain3 #count < 8
-		movq %rdi, %r8
-		and $7, %r8
-		jz memmain2 #dest % 8 == 0
-		sub $8, %r8
-		sub %r8, %rdx
-		lea memmain2(%rip), %rcx
-		sub %r8, %rcx
-		jmp *%rcx
-		movsb
-		movsb
-		movsb
-		movsb
-		movsb
-		movsb
-		movsb
-	memmain2:
 		movq %rdx, %rcx
 		shr $3, %rcx
 		rep movsq
