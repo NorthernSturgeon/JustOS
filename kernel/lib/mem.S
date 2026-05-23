@@ -1,9 +1,17 @@
-.globl _memcpy
-.globl _memset
-.globl _memmove
+.globl memcpy
+.globl memset
+.globl memmove
 
 .text
-	_memmove:
+	memcpy:
+		endbr64
+		movq %rdi, %rax
+		test %rdi, %rsi
+		cld
+		jne memmain
+	memret2:
+		ret
+	memmove:
 		endbr64
 		movq %rdi, %rax
 		test %rdi, %rsi
@@ -16,52 +24,20 @@
 		jmp memmain
 	memmove2:
 		add %rdx, %rdi
+		dec %rsi
+		dec %rdi
 		std
 	memmain:
-		cmp $8, %rdx
-		jb memmain3 #count < 8
-		movq %rdi, %r8
-		and $7, %r8
-		jz memmain2 #dest % 8 == 0
-		sub $8, %r8
-		sub %r8, %rdx
-		lea memmain2(%rip), %rcx
-		sub %r8, %rcx
-		jmp *%rcx
-		movsb
-		movsb
-		movsb
-		movsb
-		movsb
-		movsb
-		movsb
-	memmain2:
 		movq %rdx, %rcx
-		shr $3, %rcx
-		rep movsq
-	memmain3:
-		lea memret(%rip), %rcx
-		sub %rdx, %rcx
-		jmp *%rcx
-		movsb
-		movsb
-		movsb
-		movsb
-		movsb
-		movsb
-		movsb
-	memret:
+		rep movsb
 		cld
+	memret:
 		ret
-	_memcpy:
+	memset:
 		endbr64
 		movq %rdi, %rax
-		test %rdi, %rsi
-		je memret
-		cld
-		jmp memmain
-	_memset:
-		endbr64
+		test %rdi, %rdi
+		jz memset2
 		test %rdx, %rdx
 		jz memset2
 		cld

@@ -3,9 +3,6 @@
 
 #include "font.h"
 
-typedef unsigned char uint8_t;
-typedef unsigned long size_t;
-
 static uint8_t zero[13] = {
 0b00111000,
 0b01000100,
@@ -135,16 +132,16 @@ static uint8_t seven[13] = {
 };
 
 static uint8_t eight[13] = {
-0b01111100,
+0b00111000,
+0b01000100,
+0b10000010,
+0b01000100,
+0b00111000,
+0b01000100,
 0b10000010,
 0b10000010,
-0b10000010,
-0b01111100,
-0b10000010,
-0b10000010,
-0b10000010,
-0b10000010,
-0b01111100,
+0b01000100,
+0b00111000,
 0b00000000,
 0b00000000,
 0b00000000
@@ -1541,25 +1538,26 @@ static uint8_t tilde[13] = {
 0b00000000,
 };
 
-uint8_t* font_symbol_table[] = {
-	space, exclamation, doublequot, numbersign,
-	dollar, percentsign, ampersand, quot,
-	leftparenthesis, rightparenthesis, asterisk, plus,
-	comma, minus, period, slash,
-	zero, one, two, three, four, five,
-	six, seven, eight, nine, colon, semicolon, 
-	less, equal, greater, question,
-	at, A, B, C, D, E, F, G, H,
-	I, J, K, L, M, N, O, P, Q,
-	R, S, T, U, V, W, X, Y, Z,
-	leftbracket, backslash, rightbracket, caret, underscore, apostrophe,
-	a, b, c, d, e, f, g, h,
-	i, j, k, l, m, n, o, p,
-	q, r, s, t, u, v, w, x, y, z,
-	leftbrace, bar, rightbrace, tilde,
-	undefined
+volatile void* font_symbol_table[] = {
+	&space, &exclamation, &doublequot, &numbersign,
+	&dollar, &percentsign, &ampersand, &quot,
+	&leftparenthesis, &rightparenthesis, &asterisk, &plus,
+	&comma, &minus, &period, &slash,
+	&zero, &one, &two, &three, &four, &five,
+	&six, &seven, &eight, &nine, &colon, &semicolon,
+	&less, &equal, &greater, &question,
+	&at, &A, &B, &C, &D, &E, &F, &G, &H,
+	&I, &J, &K, &L, &M, &N, &O, &P, &Q,
+	&R, &S, &T, &U, &V, &W, &X, &Y, &Z,
+	&leftbracket, &backslash, &rightbracket, &caret, &underscore, &apostrophe,
+	&a, &b, &c, &d, &e, &f, &g, &h,
+	&i, &j, &k, &l, &m, &n, &o, &p,
+	&q, &r, &s, &t, &u, &v, &w, &x, &y, &z,
+	&leftbrace, &bar, &rightbrace, &tilde,
+	&undefined
 };
 
+// min max addend
 static uint8_t font_offset_table[1][3] = {
 	{0x20,0x7e,0x20}
 };
@@ -1567,9 +1565,9 @@ static uint8_t font_offset_table[1][3] = {
 size_t font_symbol_table_size = sizeof(font_symbol_table)/sizeof(font_symbol_table[0]);
 static size_t font_offset_table_size = sizeof(font_offset_table)/sizeof(font_offset_table[0]);
 
-uint8_t font_width = 7;
-uint8_t font_height = 13;
-uint8_t font_full_width = 8;
-uint8_t font_full_height = 15;
+uint16_t font_width = 7;
+uint16_t font_height = 13;
+uint16_t font_full_width = 8;
+uint16_t font_full_height = 15;
 
 #endif

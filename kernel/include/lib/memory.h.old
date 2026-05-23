@@ -1,0 +1,64 @@
+#ifndef __MEMORY_H__
+#define __MEMORY_H__
+
+#include "lib/types.h"
+
+//                        BADPOINTERBADPTR
+#define BAD_POINTER     0xBAD90187E2BAD972
+#define EFI_BAD_POINTER 0xFBFBFBFBFBFBFBFB
+#define memmask         0xFFFF800000000000ull
+
+#define phys_to_virt(ptr) ((void*)((uint64_t)(ptr)|memmask))
+#define virt_to_phys(ptr) ((void*)((uint64_t)(ptr)&~memmask))
+
+typedef enum {
+	RegionUserspaceMemory = -1,
+	RegionAvailableMemory = 0,
+	RegionKernelMemory,
+	RegionKernelPool,
+	RegionFirmwareData,
+	RegionFirmwareCode,
+	RegionACPIReclaimMemory,
+	RegionACPINVS,
+	RegionMMIO,
+	RegionMMIOPS,
+	RegionPalCode,
+	RegionReservedMemory,
+	RegionUnusableMemory,
+	RegionTables,
+	RegionPersistentMemory
+} memory_region_type;
+
+typedef struct __packed {
+	void* physical_start;
+	uint64_t number_of_pages;
+	memory_region_type region_type;
+	uint32_t attributes;
+} memory_region_t;
+
+#define REGIONS_PER_TABLE 170
+
+typedef struct __packed{
+	void* next_table;
+	uint8_t volatile semafore;
+	uint8_t used;
+	uint8_t max_size_idx;
+	uint8_t min_size_idx;
+	uint32_t pad;
+	memory_region_t regions[REGIONS_PER_TABLE];
+} memory_regions_table;
+
+typedef struct{ //global memory region table pointer
+	memory_regions_table *first_table;
+	uint64_t total_tables:48;
+	uint64_t semafore1:8;
+	uint64_t semafore2:8;
+} gmrtp_t;
+
+extern gmrtp_t volatile gmrtp;
+
+extern void init_mm(void* desc_list, uint64_t desc_count, uint64_t desc_size);
+extern void modify_region()
+//extern void* alloc_pages(size_t num, uint32_t attr);
+
+#endif

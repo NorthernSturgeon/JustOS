@@ -6,7 +6,7 @@
 static CHAR8 volatile *buffer = NULL;
 static UINT16 lenght = 0;
 
-static CHAR8 digits = "-0123456789";
+static CHAR8 digits[] = "-0123456789";
 
 UINT8 SetBuffer(CHAR8 *buf, UINT16 len){
 	if (buf[0] == '{' && buf[len-1] == '}'){
@@ -17,11 +17,6 @@ UINT8 SetBuffer(CHAR8 *buf, UINT16 len){
 	return 1;
 }
 
-static inline UINT8 cmp(CHAR8 *src1, CHAR8 *src2, UINT8 n){
-	for (UINT8 i=0;src1[i]==src2[i]&&i<n;i++);
-	return !(i-n);
-}
-
 JsonValue_t Search(CHAR8 *name){
 	JsonValue_t ret;
 	UINT8 offset2;
@@ -29,19 +24,19 @@ JsonValue_t Search(CHAR8 *name){
 		uint8_t inStr:1;
 		uint8_t inVal:1;
 		uint8_t founded:1;
-	} flags = {0;0;0};
+	} flags = {0};
 	for (UINT16 offset=1;offset<lenght;offset++){
 		if (buffer[offset] == '"'){
 			flags.inStr = TRUE;
-			continue
+			continue;
 		}
 		if (!flags.inStr) {
 			if (buffer[offset] == ':') flags.inVal = TRUE;
 			else if (buffer[offset] == ',') flags.inVal = FALSE;
 			continue;
-			}
+		}
 		if (!flags.founded && flags.inStr && !flags.inVal){
-			founded = cmp(&buffer[offset], name, strlena(name));
+			flags.founded = !strncmpa(&buffer[offset], name, strlena(name));
 		}
 		if (flags.founded && flags.inVal){
 			ret.offset = offset;
@@ -58,7 +53,7 @@ JsonValue_t Search(CHAR8 *name){
 					}
 				}
 				if (!ret.type){
-					size = 1;
+					ret.size = 1;
 					if (buffer[offset] == 'n') ret.type = TYPE_NULL;
 					else ret.type = TYPE_BOOL;
 				}
@@ -75,7 +70,7 @@ UINT8 GetValue(VOID *dest, JsonValue_t val_type){
 	switch (val_type.type){
 		case TYPE_NULL: return 2;
 		case TYPE_BOOL:
-			if (buffer[val_type.offset] == 't') *(BOOL*)dest = TRUE;
+			if (buffer[val_type.offset] == 't') *(BOOLEAN*)dest = TRUE;
 			break;
 		case TYPE_STR:
 			CopyMem(dest, &buffer[val_type.offset], val_type.size);
@@ -90,7 +85,7 @@ UINT8 GetValue(VOID *dest, JsonValue_t val_type){
 			for (--cur_pos;cur_pos!=0;cur_pos++){
 				ret += (buffer[val_type.offset+cur_pos]-48)*factor;
 				factor *= 10;
-			}
+			};
 			if (sign) ret = -ret;
 			*(INT64*)dest = ret;
 			break;

@@ -1,10 +1,39 @@
 .global start_kernel
 
-.text
+.text/*
+	page_fault_asm:
+		popq %rdi
+		mov %cr2, %rsi
+		jmp page_fault*/
 	start_kernel:
-		andl $0xFFFFFFFF, %ecx
-		movq %rcx, %cr3
-		movq %rdx, %rsp
+		mov %rcx, %cr3 # bye, efi paging
+		# enable SSE support
+		mov %cr0, %rax
+
+		xor %rcx, %rcx
+		not %rcx
+		xor $0b1100, %rcx
+
+		and %rcx, %rax
+		or $2, %rax
+		mov %rax, %cr0
+		mov %cr4, %rax
+
+		xor %rcx, %rcx
+		not %rcx
+		xor $0b10000000000, %rcx
+		
+		and %rcx, %rax
+		or $0b1000000000, %rax
+		mov %rax, %cr4
+		sub $4, %rdx
+		stmxcsr (%rdx)
+		orl $0b1111111110000000, (%rdx)
+		movl (%rdx), %ecx
+		ldmxcsr (%rdx)
+		add $4, %rdx
+		mov %rdx, %rsp
+
 		# fill GDT
 #		subq $40, %rsp
 #		movq $0, (%rsp)
@@ -17,6 +46,7 @@
 #		movq $0x00C092000000FFFF, 16(%rsp)
 #		movq $0x00A0FA000000FFFF, 24(%rsp)
 #		movq $0x00C0F2000000FFFF, 32(%rsp)
+
 		movabs $0x00C0F2000000FFFF, %rax
 		pushq %rax
 		movabs $0x00A0FA000000FFFF, %rax
@@ -28,10 +58,10 @@
 		xor %rax, %rax
 		pushq %rax
 		# setup GDT
-		movq %rsp, %rax
+		mov %rsp, %rax
 		pushq %rax
 		pushw $40
-		movq %rsp, %rax
+		mov %rsp, %rax
 		lgdt (%rax)
 		# reload GDT
 		movw $0x10, %ax
