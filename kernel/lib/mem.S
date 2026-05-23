@@ -15,7 +15,7 @@
 		endbr64
 		movq %rdi, %rax
 		test %rdi, %rsi
-		je memret2
+		je memret
 		add %rdx, %rsi
 		cmp %rsi, %rdi
 		jb memmove2
@@ -24,26 +24,14 @@
 		jmp memmain
 	memmove2:
 		add %rdx, %rdi
+		dec %rsi
+		dec %rdi
 		std
 	memmain:
-		cmp $8, %rdx
-		jb memmain3 #count < 8
 		movq %rdx, %rcx
-		shr $3, %rcx
-		rep movsq
-	memmain3:
-		lea memret(%rip), %rcx
-		sub %rdx, %rcx
-		jmp *%rcx
-		movsb
-		movsb
-		movsb
-		movsb
-		movsb
-		movsb
-		movsb
-	memret:
+		rep movsb
 		cld
+	memret:
 		ret
 	memset:
 		endbr64

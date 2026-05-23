@@ -26,6 +26,7 @@ vhdinstall:
 clear:
 	rm -R out
 	mkdir out
+	touch ./out/.gitkeep
 
 build:
 	@as final.S -64 -o out/final.o 

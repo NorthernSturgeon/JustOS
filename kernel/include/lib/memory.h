@@ -47,6 +47,10 @@ typedef struct{
 extern gorl_t gorl;
 
 extern void init_mm();
-//extern void* alloc_pages(size_t num, uint32_t attr);
+extern void* allocate_pages(size_t size);
+extern void free_pages(void* ptr, size_t size);
+
+extern void* malloc(size_t size);
+extern void free(void* ptr);
 
 #endif

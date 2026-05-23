@@ -8,8 +8,15 @@ typedef struct{
 	uint32_t edx;
 } cpuid_t;
 
-inline void __cpuid(cpuid_t *values) {
-	asm ("cpuid;":"+a"(values->eax), "=b"(values->ebx), "+c"(values->ecx), "=d"(values->edx):);
+static __always_inline cpuid_t __cpuid(uint32_t eax, uint32_t ecx) {
+	cpuid_t values = {
+		.eax = eax,
+		.ecx = ecx
+	};
+
+	asm ("cpuid;":"+a"(values.eax), "=b"(values.ebx), "+c"(values.ecx), "=d"(values.edx):);
+
+	return values;
 }
 
 #endif

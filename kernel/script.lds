@@ -3,5 +3,5 @@ ENTRY(kentry)
 
 SECTIONS{
 	.text ALIGN(4096):{ *(.text) *(.rodata.*)}
-	.data ALIGN(4096):{ *(.data) *(.bss) *(.got.plt) *(.dynamic) *(*.hash)}
+	.data ALIGN(4096):{ *(.data) *(.bss)}
 }

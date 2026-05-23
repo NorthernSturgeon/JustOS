@@ -85,7 +85,7 @@ idtr_t itdr;
 #undef DEBUG
 //#define SETVAMAP
 #define ovmf_r11337
-#define CUSTOM_VIDEOMODE 12
+//#define CUSTOM_VIDEOMODE 12
 
 #define STACK_SIZE 32768
 //                     6347393123150700
@@ -376,7 +376,9 @@ CompareGuid(&conf_tb[i].VendorGuid,&acpi2_guid) == 0){
 	if (!boot_info->acpi_rdsp) Fatality(LDR_ACPI, 0);
 }
 
-static VOID setup_video(boot_info_t *boot_info){
+static VOID setup_video(boot_info_t *boot_info, INTN tw, INTN th){
+	Print(L"tw=%lld th=%lld\n", tw, th);
+
 	//get videomode
 	EFI_GRAPHICS_OUTPUT_PROTOCOL *gop;
 	EFI_STATUS status = LibLocateProtocol(&gEfiGraphicsOutputProtocolGuid, (VOID**)&gop);
@@ -395,18 +397,19 @@ static VOID setup_video(boot_info_t *boot_info){
 	} else {
 		status = uefi_call_wrapper(gop->SetMode, 2, gop, nativeMode);
 	}
-/*
-	#ifdef DEBUG
+
 	UINTN numModes = gop->Mode->MaxMode;
 	Print(L"nativeMode: %d, numModes: %d\n", nativeMode, numModes);
 	for (UINT32 i=0; i < numModes; i++){
 		status = uefi_call_wrapper(gop->QueryMode, 4, gop, i, &SizeOfInfo, &info);
-		Print(L"D: mode %03d width %d height %d ppl %d format %d\n", i, \
-			info->HorizontalResolution, info->VerticalResolution, \
-			info->PixelsPerScanLine, info->PixelFormat);
+
+		if (info->HorizontalResolution == tw && info->VerticalResolution == th){
+			status = uefi_call_wrapper(gop->SetMode, 2, gop, i);
+			goto final;
+		}
 	}
-	#endif
-*/
+
+// there is no mode wanted in config
 	#ifdef CUSTOM_VIDEOMODE
 	status = uefi_call_wrapper(gop->SetMode, 2, gop, CUSTOM_VIDEOMODE);
 	status = uefi_call_wrapper(gop->QueryMode, 4, gop, CUSTOM_VIDEOMODE, &SizeOfInfo, &info);
@@ -414,6 +417,7 @@ static VOID setup_video(boot_info_t *boot_info){
 	status = uefi_call_wrapper(gop->QueryMode, 4, gop, nativeMode, &SizeOfInfo, &info);
 	#endif
 
+final:
 	boot_info->vram = (VOID*)gop->Mode->FrameBufferBase;
 	boot_info->vram_size = (UINT64)gop->Mode->FrameBufferSize;
 	boot_info->width = (UINT16)info->HorizontalResolution;
@@ -439,8 +443,6 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 	boot_info_t boot_info;
 
 	setup_acpi(&boot_info);
-
-	setup_video(&boot_info);
 	
 	//load the kernel
 	///open volume
@@ -451,7 +453,13 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 	CHAR8 *tsv;
 	UINTN tsv_size = ReadFile(root, L"\\JUSTOS\\justboot.tsv", (VOID**)&tsv, 0);
 
-	CHAR16* kernelpath = tsv_parsestr(&tsv[7]);
+	setup_video(
+		&boot_info,
+		tsv_parseint(tsv_search(tsv, "video", 1)),
+		tsv_parseint(tsv_search(tsv, "video", 2))
+	);
+
+	CHAR16* kernelpath = tsv_parsestr(tsv_search(tsv, "kernel", 1));
 	if (!kernelpath) Fatality(LDR_CFG, 0);
 	Print(L"%s \n", kernelpath);
 	FREE_KPAGES(tsv, tsv_size>>12);

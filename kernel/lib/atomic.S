@@ -19,7 +19,7 @@
     
     rwlock_inc:
         endbr64
-        # i don't sure if xor instructions are needed
+        # i don't sure if xor instruction are needed
         xor %rcx, %rcx
     1:
         xor %rax, %rax

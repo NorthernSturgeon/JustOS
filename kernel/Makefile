@@ -13,6 +13,7 @@ LDFLAGS=-nostdlib -znocombreloc \
 clear:
 	rm -R ./out
 	mkdir ./out
+	touch ./out/.gitkeep
 
 rebuild: clear build
 
@@ -28,6 +29,7 @@ vhdinstall:
 build-all:
 	@as lib/mem.S -64 -o out/lib.mem.s.o
 	@as lib/atomic.S -64 -o out/lib.atomic.s.o
+	@gcc lib/physmem.c $(CFLAGS) out/lib.physmem.c.o
 	@gcc lib/memory.c $(CFLAGS) out/lib.memory.c.o
 	@gcc lib/console.c $(CFLAGS) out/lib.console.c.o
 	@#gcc lib/crc32.c $(CFLAGS) out/lib.crc32.c.o
@@ -42,6 +44,6 @@ build-all:
 
 link-all:
 	@ld $(LDFLAGS) out/header.s.o out/kernel.c.o \
-		out/lib.mem.s.o out/lib.atomic.s.o out/lib.memory.c.o \
+		out/lib.mem.s.o out/lib.atomic.s.o out/lib.physmem.c.o out/lib.memory.c.o \
 		out/lib.font.c.o out/video.c.o out/lib.console.c.o 
 	@echo all built successfully!

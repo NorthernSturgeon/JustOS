@@ -69,7 +69,7 @@ void kmain(){
 	//read_reg(cr0.value, cr0);
 
 	printf("Hello from kernel!\n");
-	printf("BT1n0o: %p\n", boot_info);
+	printf("BTinfo: %p\n", boot_info);
 	printf("RTsvcs: %p\n", boot_info->rtsvcs);
 	printf("ACPIrp: %p\n", boot_info->acpi_rdsp);
 	printf("PTZONE: %p\n", boot_info->ptzone);
@@ -79,7 +79,6 @@ void kmain(){
 	printf("VRAM  : %p\n", boot_info->vram);
 	printf("VRAMsz: %u\n", boot_info->vram_size);
 	printf("videoformat: %ux%u %u\n", (uint64_t)boot_info->width, (uint64_t)boot_info->height, (uint64_t)boot_info->format);
-
 /*
 	set_color(COLOR_GRAY, COLOR_BLACK);
 	printf("base             | lenght           | type | attr\n");
@@ -110,8 +109,6 @@ void kmain(){
 		set_color(0x007f7fff, 0);
 		printf("%p\n", gorl.list[i]);
 	}
-
-	//printf("reg ft: %p\n", gmrtp.first_table);
 
 	for(;;);
 	//_asm_ijmp();
