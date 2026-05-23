@@ -287,9 +287,12 @@ void init_mm(){
 	size_t total = (size_t)&gorl.list[gorl.lenght] - (size_t)boot_info->ptzone;
 
 	//
-	mark_busy(phys_to_virt(NULL), 1u<<20);
-	mark_busy(boot_info->ptzone, round_to(total, 4096));
-	mark_busy((void*)(((uint64_t)boot_info)&0xfff), 1<<16);
+	mark_busy(phys_to_virt(NULL), 1u<<20); // first megabyte
+	mark_busy(boot_info->ptzone, round_to(total, 4096)); // page tables and after
+
+	printf("kernel: %p, %u bytes\n", (void*)((((uint64_t)boot_info)&(~0xfffull))-4096), round_to(boot_info->kernel_size, 4096));
+	mark_busy((void*)((((uint64_t)boot_info)&(~0xfffull))-4096), round_to(boot_info->kernel_size, 4096)); // kernel
+	mark_busy(boot_info->stack, boot_info->stack_size); // kernel stack
 
 	size_t st_size = to_pages((size_t)virt_to_phys(gorl.list[gorl.lenght-1]) >> 9);
 	gorl.table = allocate_pages(st_size);

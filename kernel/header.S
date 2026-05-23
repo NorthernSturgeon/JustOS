@@ -3,7 +3,7 @@
 
 .text
 	__boot_info:
-	.rept 8
+	.rept 11
 	.quad 0
 	.endr
 	.rept 4

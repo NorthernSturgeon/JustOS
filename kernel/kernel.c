@@ -72,6 +72,9 @@ void kmain(){
 	printf("BTinfo: %p\n", boot_info);
 	printf("RTsvcs: %p\n", boot_info->rtsvcs);
 	printf("ACPIrp: %p\n", boot_info->acpi_rdsp);
+	printf("STACK : %p\n", boot_info->stack);
+	printf("STCKsz: %u\n", boot_info->stack_size);
+	printf("KRNLsz: %p\n", boot_info->kernel_size);
 	printf("PTZONE: %p\n", boot_info->ptzone);
 	printf("PTZ_sz: %u\n", boot_info->ptzone_size);
 	printf("MMAP  : %p\n", boot_info->mmap);

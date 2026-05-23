@@ -52,6 +52,9 @@ typedef union{
 typedef struct __attribute__((__packed__)){
 	VOID *rtsvcs;
 	VOID *acpi_rdsp;
+	VOID *stack;
+	UINT64 stack_size;
+	UINT64 kernel_size;
 	page_entry_t *ptzone;
 	UINT64 ptzone_size;
 	e820_entry_t *mmap;
@@ -440,7 +443,9 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 	register EFI_STATUS status; //one variable for all
 
 	//set some f
-	boot_info_t boot_info;
+	boot_info_t boot_info = {
+		.stack_size=STACK_SIZE
+	};
 
 	setup_acpi(&boot_info);
 	
@@ -465,10 +470,14 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 	FREE_KPAGES(tsv, tsv_size>>12);
 
 	VOID *kernel;
-	UINT64 k_filesz = ReadFile(root, kernelpath, &kernel, TO_PAGES(STACK_SIZE));
+	boot_info.kernel_size = ReadFile(root, kernelpath, &kernel, 0);
 	FreePool(kernelpath);
 
 	Print(L"D: kernel loaded at: %p\n", kernel);
+
+	ALLOC_KPAGES(&boot_info.stack, TO_PAGES(STACK_SIZE));
+	if (!boot_info.stack) Fatality(LDR_MEM, 9);
+	register UINT64 stack = (UINT64)CONV_PTR(boot_info.stack+STACK_SIZE);
 	
 	//check elf
 	register UINT8 elf_status = check_elf(kernel);
@@ -555,7 +564,6 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 
 	//start kernel
 	if (entry < 0x1000) entry += 0x1000;
-	register UINT64 stack = (UINT64)CONV_PTR(kernel+k_filesz);
 
 	stack &= UINT64_MAX^0xF;
 
@@ -569,6 +577,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 	boot_info.mmap = CONV_PTR(boot_info.mmap);
 	boot_info.vram = CONV_PTR(boot_info.vram);
 	boot_info.ptzone = CONV_PTR(boot_info.ptzone);
+	boot_info.stack = CONV_PTR(boot_info.stack);
 
 	//copy boot_info to kernel
 	RtCopyMem((UINT8*)kernel+4096, &boot_info, sizeof(boot_info));
