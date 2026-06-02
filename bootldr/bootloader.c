@@ -505,8 +505,8 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 		if (desc->Attribute&EFI_MEMORY_WT) Print(L"WT ");
 		if (desc->Attribute&EFI_MEMORY_WB) Print(L"WB ");
 		if (desc->Attribute&EFI_MEMORY_UCE) Print(L"UCE ");
-		if (desc->Attribute&EFI_MEMORY_RP) Print(L"WP ");
-		if (desc->Attribute&EFI_MEMORY_WP) Print(L"RP ");
+		if (desc->Attribute&EFI_MEMORY_RP) Print(L"RP ");
+		if (desc->Attribute&EFI_MEMORY_WP) Print(L"WP ");
 		if (desc->Attribute&EFI_MEMORY_XP) Print(L"XP ");
 		if (desc->Attribute&EFI_MEMORY_RUNTIME) Print(L"RT ");
 		Print(L"\n");
