@@ -6,24 +6,20 @@ LIBC_SOURCES := lib/mem.S lib/atomic.S lib/physmem.c lib/memory.c \
 
 KERNEL_SOURCES := header.S kernel.c video.c
 
-KERNEL_CFLAGS := -c -I include -nostdlib -ffreestanding \
+CFLAGS := -c -I include -nostdlib -ffreestanding -fPIC \
 	-fomit-frame-pointer -fno-stack-protector \
-	-Wall -Wextra -Werror -fPIE \
+	-Wall -Wextra -Werror -fno-plt -ftree-vectorize \
 	-fno-asynchronous-unwind-tables -include lib/types.h \
 	-march=x86-64 -std=c17 -fno-tree-vrp -mstackrealign \
-	-O1 -mcmodel=medium -mno-red-zone
+	-O2 -mcmodel=medium -mno-red-zone -fno-semantic-interposition
 
-#LIBC_CFLAGS := -c -I include -nostdlib -ffreestanding \
-	-fomit-frame-pointer -fno-stack-protector \
-	-Wall -Wextra -Werror -fPIC \
-	-fno-asynchronous-unwind-tables -include lib/types.h \
-	-march=x86-64 -std=c17 -fno-tree-vrp -mstackrealign \
-	-O1 -mcmodel=medium -mno-red-zone
+KERNEL_CFLAGS := $(CFLAGS)
 
-KERNEL_LDFLAGS := -nostdlib -znocombreloc \
-	-T script.lds
+LIBC_CFLAGS := $(CFLAGS)
 
-#LIBC_LDFLAGS := -nostdlib -znocombreloc -shared
+KERNEL_LDFLAGS := -nostdlib -z relro -z now -I JUSTOS/bootx64.efi -pie --export-dynamic -T script.lds
+
+LIBC_LDFLAGS := -nostdlib -z relro -z now -h '\JUSTOS\libc.so' -shared -T libc.lds
 
 OUT_DIR := out
 
@@ -33,10 +29,8 @@ LIBC_OBJS := $(LIBC_OBJS:.S=.S.o)
 KERNEL_OBJS := $(addprefix $(OUT_DIR)/,$(KERNEL_SOURCES:.c=.c.o))
 KERNEL_OBJS := $(KERNEL_OBJS:.S=.S.o)
 
-ALL_OBJS := $(KERNEL_OBJS) $(LIBC_OBJS)
-
 $(OUT_DIR)/lib.%.c.o: lib/%.c
-	@gcc $< $(KERNEL_CFLAGS) -o $@
+	@gcc $< $(LIBC_CFLAGS) -o $@
 
 $(OUT_DIR)/lib.%.S.o: lib/%.S
 	@as $< -64 -o $@
@@ -59,16 +53,17 @@ clear:
 	touch ./$(OUT_DIR)/.gitkeep
 
 lib: $(LIBC_OBJS)
-#	ld $(LIBC_OBJS) $(LIBC_LDFLAGS) -o $(OUT_DIR)/libc.so
-	@echo libc compiled successfully!
+	ld $(LIBC_OBJS) $(LIBC_LDFLAGS) -o $(OUT_DIR)/libc.so
+	@echo libc.so compiled successfully!
 
 kernel: lib $(KERNEL_OBJS)
-	ld $(ALL_OBJS) $(KERNEL_LDFLAGS) -o $(OUT_DIR)/kernel.elf
-	@echo kernel compiled successfully!
+	ld $(KERNEL_OBJS) $(KERNEL_LDFLAGS) -o $(OUT_DIR)/kernel.elf $(OUT_DIR)/libc.so
+	@echo kernel.elf compiled successfully!
 
 vhdinstall:
 	losetup --partscan /dev/loop0 ${VHDINSTALLPATH}
 	mount /dev/loop0p1 /mnt
 	cp $(OUT_DIR)/kernel.elf /mnt/JUSTOS
+	cp $(OUT_DIR)/libc.so /mnt/JUSTOS
 	umount /dev/loop0p1
 	losetup -d /dev/loop0

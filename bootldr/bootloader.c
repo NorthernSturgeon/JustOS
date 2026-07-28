@@ -8,6 +8,7 @@
 #include "lib/console.h"
 #include "e820.h"
 #include "tsv.h"
+#include "dynlink.h"
 
 //#define ErrorCheck(actual, expected, msg) if(actual != expected) {Print(msg);return actual;}
 
@@ -90,7 +91,6 @@ idtr_t itdr;
 #define ovmf_r11337
 //#define CUSTOM_VIDEOMODE 12
 
-#define STACK_SIZE 32768
 //                     6347393123150700
 #define MAX_PHY_ADDR 0x00007fffffffffffull
 
@@ -116,52 +116,53 @@ static inline size_t div_up(size_t a, size_t b) { return (a+b-1)/b; }
 //                     6448403224160800
 #define PTENTRY_MASK 0x0000fffffffff000ull
 
-#define GET_PTE(addr) ((page_entry_t*)((UINT64)(addr)&PTENTRY_MASK))
-#define SET_PTE(addr, attr) ((((UINT64)(addr))&PTENTRY_MASK)|attr)
+#define DFLT_PTE_ATTR 3 // WRITE | PRESENT
+#define GET_PTE(addr) ((page_entry_t*)(((UINT64)(addr))&PTENTRY_MASK))
+#define SET_PTE(addr, attr) ((((UINT64)(addr))&PTENTRY_MASK)|(attr))
 
 extern VOID start_kernel(boot_info_t *boot_info, VOID *k_entry, VOID *k_stack, VOID *cr3);
 
 //extern VOID page_fault_asm();
 
-#ifdef DEBUG
-static const WCHAR* memtypeconvert(EFI_MEMORY_TYPE memtype){
-	switch (memtype){
-	case EfiReservedMemoryType:
-		return L"reserved";
-	case EfiLoaderCode:
-		return L"ldr-code";
-	case EfiLoaderData:
-		return L"ldr-data";
-	case EfiBootServicesCode:
-		return L"BS-code ";
-	case EfiBootServicesData:
-		return L"BS-data ";
-	case EfiRuntimeServicesCode:
-		return L"RT-code ";
-	case EfiRuntimeServicesData:
-		return L"RT-data ";
-	case EfiConventionalMemory:
-		return L"conv-mem";
-	case EfiUnusableMemory:
-		return L"unusable";
-	case EfiACPIReclaimMemory:
-		return L"ACPIrecl";
-	case EfiACPIMemoryNVS:
-		return L"ACPI-NVS";
-	case EfiMemoryMappedIO:
-		return L"MMIO    ";
-	case EfiMemoryMappedIOPortSpace:
-		return L"MMIO-PS ";
-	case EfiPalCode:
-		return L"palcode ";
-	default:
-		return L"unknown ";
-	}
-}
-#endif
+// #ifdef DEBUG
+// static const WCHAR* memtypeconvert(EFI_MEMORY_TYPE memtype){
+// 	switch (memtype){
+// 	case EfiReservedMemoryType:
+// 		return L"reserved";
+// 	case EfiLoaderCode:
+// 		return L"ldr-code";
+// 	case EfiLoaderData:
+// 		return L"ldr-data";
+// 	case EfiBootServicesCode:
+// 		return L"BS-code ";
+// 	case EfiBootServicesData:
+// 		return L"BS-data ";
+// 	case EfiRuntimeServicesCode:
+// 		return L"RT-code ";
+// 	case EfiRuntimeServicesData:
+// 		return L"RT-data ";
+// 	case EfiConventionalMemory:
+// 		return L"conv-mem";
+// 	case EfiUnusableMemory:
+// 		return L"unusable";
+// 	case EfiACPIReclaimMemory:
+// 		return L"ACPIrecl";
+// 	case EfiACPIMemoryNVS:
+// 		return L"ACPI-NVS";
+// 	case EfiMemoryMappedIO:
+// 		return L"MMIO    ";
+// 	case EfiMemoryMappedIOPortSpace:
+// 		return L"MMIO-PS ";
+// 	case EfiPalCode:
+// 		return L"palcode ";
+// 	default:
+// 		return L"unknown ";
+// 	}
+// }
+// #endif
 
-static VOID Fatality(UINT32 code, UINT32 subcode){
-	Print(L"\nFatality! %u:%u\n", code, subcode);
+VOID Fatality(UINT32 code, UINT32 subcode){
+	Print(L"\nFatality! %d:%d\n", code, subcode);
 	UINTN KeyEvent = 0;
 	EFI_INPUT_KEY Key;
 	Print(L"Press any key to reboot...\n");
@@ -172,9 +173,11 @@ static VOID Fatality(UINT32 code, UINT32 subcode){
 	uefi_call_wrapper(RT->ResetSystem,4,EfiResetCold,EFI_SUCCESS,0,NULL);
 }
 
-static VOID GetMMap(EFI_MEMORY_DESCRIPTOR **mmap, UINTN *mmapsize,
+static VOID GetMMap(
+	EFI_MEMORY_DESCRIPTOR **mmap, UINTN *mmapsize,
 	UINTN *mapkey, UINTN *descsize, 
-	UINT32 *descver, UINTN *num_entries){
+	UINT32 *descver, UINTN *num_entries
+){
 	register EFI_STATUS status = uefi_call_wrapper(BS->GetMemoryMap, 5, mmapsize, *mmap, mapkey, descsize, descver);
 	*mmapsize += 2*(*descsize);
 	uefi_call_wrapper(BS->AllocatePages, 4, AllocateAnyPages, EfiLoaderData, TO_PAGES(*mmapsize), mmap);
@@ -202,21 +205,28 @@ static EFI_STATUS OpenRoot(EFI_HANDLE imgHand, EFI_FILE_HANDLE *file){
 
 UINTN ReadFile(EFI_FILE_HANDLE fileDir, CHAR16 *filename, VOID** buffer, UINTN addend){
 	EFI_FILE_HANDLE file;
+	Print(L"ReadFile(): %s\n", filename);
 	register EFI_STATUS status = uefi_call_wrapper(fileDir->Open, 5, fileDir, &file, filename, EFI_FILE_MODE_READ, EFI_FILE_READ_ONLY);
-	if (EFI_ERROR(status)) Fatality(LDR_FILE, status);
+	if (EFI_ERROR(status)) Fatality(-LDR_FILE, status);
 
 	EFI_FILE_INFO* fileinfo = LibFileInfo(file);
-	UINTN filesz = TO_PAGES(fileinfo->FileSize)+addend;
-	ALLOC_KPAGES(buffer, filesz);
-	filesz <<= 12; // pages -> bytes
-
-	status = uefi_call_wrapper(file->Read, 3, file, &filesz, *buffer);
+	const UINTN filesz = fileinfo->FileSize+addend;
 	FreePool(fileinfo);
-	if (EFI_ERROR(status)) Fatality(LDR_FILE, status);
+
+	UINTN pages = TO_PAGES(filesz);
+	ALLOC_KPAGES(buffer, pages);
+
+	pages <<= 12; // pages -> bytes
+	status = uefi_call_wrapper(file->Read, 3, file, &pages, *buffer);
+	if (EFI_ERROR(status)) Fatality(-LDR_FILE*10, status);
 
 	uefi_call_wrapper(file->Close, 1, file);
 
 	return filesz;
+}
+
+VOID FileDestructor(VOID* file, UINTN filesz){
+	FREE_KPAGES(file, TO_PAGES(filesz));
 }
 
 static EFI_STATUS allocate_ptzone(boot_info_t *boot_info, EFI_MEMORY_DESCRIPTOR *mmap, UINTN num_entries, UINTN descsize){
@@ -301,19 +311,19 @@ static VOID alloc_page(boot_info_t *boot_info, virt_addr_t vaddr, UINT64 *free_p
 	cur_pt = GET_PTE(boot_info->ptzone[vaddr.f.pml4+pml4offset].value); //get pdt from pml4
 	if (cur_pt == NULL) { //pdt doesn't exists
 		cur_pt = boot_info->ptzone + (boot_info->ptzone_size - (*free_ptzonesz)--)*512; //create pdt
-		boot_info->ptzone[vaddr.f.pml4+pml4offset].value = SET_PTE(cur_pt, 3); //set pdt in pml4
+		boot_info->ptzone[vaddr.f.pml4+pml4offset].value = SET_PTE(cur_pt, DFLT_PTE_ATTR); //set pdt in pml4
 	}
 	prev_pt = cur_pt; //save current pdt
 	cur_pt = GET_PTE(cur_pt[vaddr.f.pdt].value); //get pd in pdt
 	if (cur_pt == NULL) { //pd doesn't exists
 		cur_pt = boot_info->ptzone + (boot_info->ptzone_size - (*free_ptzonesz)--)*512; //create pd
-		prev_pt[vaddr.f.pdt].value = SET_PTE(cur_pt, 3); //set pd in pdt
+		prev_pt[vaddr.f.pdt].value = SET_PTE(cur_pt, DFLT_PTE_ATTR); //set pd in pdt
 	}
 	prev_pt = cur_pt; //save current pd
 	cur_pt = GET_PTE(cur_pt[vaddr.f.pd].value); //get pt from pd
 	if (cur_pt == NULL) { //pt doesn't exists
 		cur_pt = boot_info->ptzone + (boot_info->ptzone_size - (*free_ptzonesz)--)*512; //create pt
-		prev_pt[vaddr.f.pd].value = SET_PTE(cur_pt, 3); //set pt in pd
+		prev_pt[vaddr.f.pd].value = SET_PTE(cur_pt, DFLT_PTE_ATTR); //set pt in pd
 	}
 	cur_pt[vaddr.f.pt].value = SET_PTE(vaddr.addr, attr); //set page in pt
 }
@@ -334,9 +344,11 @@ static VOID setup_paging(boot_info_t *boot_info, EFI_MEMORY_DESCRIPTOR *mmap, UI
 	vaddr.addr += 4096;
 	alloc_page(boot_info, vaddr, &free_ptzonesz, 0, 3);
 	
-	for (vaddr.addr = (UINT64)boot_info->vram; \
-	vaddr.addr < (UINT64)boot_info->vram + boot_info->vram_size; \
-	vaddr.addr += 4096) {
+	for (
+		vaddr.addr = (UINT64)boot_info->vram;
+		vaddr.addr < (UINT64)boot_info->vram + boot_info->vram_size;
+		vaddr.addr += 4096
+	){
 		alloc_page(boot_info, vaddr, &free_ptzonesz, 256, 3);
 	}
 
@@ -412,7 +424,7 @@ static VOID setup_video(boot_info_t *boot_info, INTN tw, INTN th){
 		}
 	}
 
-// there is no mode wanted in config
+// there is no mode requested by config
 	#ifdef CUSTOM_VIDEOMODE
 	status = uefi_call_wrapper(gop->SetMode, 2, gop, CUSTOM_VIDEOMODE);
 	status = uefi_call_wrapper(gop->QueryMode, 4, gop, CUSTOM_VIDEOMODE, &SizeOfInfo, &info);
@@ -443,9 +455,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 	register EFI_STATUS status; //one variable for all
 
 	//set some f
-	boot_info_t boot_info = {
-		.stack_size=STACK_SIZE
-	};
+	boot_info_t boot_info;
 
 	setup_acpi(&boot_info);
 	
@@ -455,8 +465,10 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 	status = OpenRoot(ImageHandle, &root);
 	if (EFI_ERROR(status)) Fatality(LDR_DISK, status);
 
-	CHAR8 *tsv;
-	UINTN tsv_size = ReadFile(root, L"\\JUSTOS\\justboot.tsv", (VOID**)&tsv, 0);
+	CHAR8 *tsv_file;
+	UINTN tsv_size = ReadFile(root, L"\\JUSTOS\\justboot.tsv", (VOID**)&tsv_file, 0);
+	CHAR8 *tsv = tsv_init(tsv_file, tsv_size);
+	FileDestructor(tsv_file, tsv_size);
 
 	setup_video(
 		&boot_info,
@@ -464,25 +476,32 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 		tsv_parseint(tsv_search(tsv, "video", 2))
 	);
 
-	CHAR16* kernelpath = tsv_parsestr(tsv_search(tsv, "kernel", 1));
+	boot_info.stack_size = tsv_parseint(tsv_search(tsv, "stack", 1));
+	Print(L"D: stack size: %llu\n", boot_info.stack_size);
+
+	CHAR8* kernelpath = tsv_search(tsv, "kernel", 1);
 	if (!kernelpath) Fatality(LDR_CFG, 0);
-	Print(L"%s \n", kernelpath);
-	FREE_KPAGES(tsv, tsv_size>>12);
 
-	VOID *kernel;
-	boot_info.kernel_size = ReadFile(root, kernelpath, &kernel, 0);
-	FreePool(kernelpath);
+	CHAR16* tmp = makechar16(kernelpath);
+	if (!tmp) Fatality(LDR_MEM, 999);
+	//Print(L"%s \n", tmp);
+	FreePool(tmp);
 
+	dl_init(root);
+	libid_weakptr kernel_lib = dl_process(kernelpath, true);
+
+	VOID *kernel = kernel_lib->image;
+	boot_info.kernel_size = kernel_lib->imagesize;
+
+	FreePool(tsv);
 	Print(L"D: kernel loaded at: %p\n", kernel);
 
-	ALLOC_KPAGES(&boot_info.stack, TO_PAGES(STACK_SIZE));
+	ALLOC_KPAGES(&boot_info.stack, TO_PAGES(boot_info.stack_size));
 	if (!boot_info.stack) Fatality(LDR_MEM, 9);
-	register UINT64 stack = (UINT64)CONV_PTR(boot_info.stack+STACK_SIZE);
+	register UINT64 stack = (UINT64)CONV_PTR(boot_info.stack+boot_info.stack_size);
 	
 	//check elf
-	register UINT8 elf_status = check_elf(kernel);
-	if (elf_status != 0) Fatality(LDR_ELF, elf_status);
-	UINT64 entry = ((elf_hdr_t*)kernel)->e_entry;
+	UINT64 entry = ((Elf64_Ehdr*)kernel)->e_entry;
 	
 	//EXIT BOOT SERVICES
 	//uefi_call_wrapper(ST->ConOut->ClearScreen, 1, ST->ConOut);
@@ -494,24 +513,24 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 	GetMMap(&mmap, &mmapsize, &mapkey, &descsize, &descver, &num_entries);
 	status = allocate_ptzone(&boot_info, mmap, num_entries, descsize);
 
-	#ifdef DEBUG
-	GetMMap(&mmap, &mmapsize, &mapkey, &descsize, &descver, &num_entries);
-	register UINTN i = 0;
-	for (;i < num_entries; i++) {
-		register EFI_MEMORY_DESCRIPTOR *desc = MMAP(i);
-		Print(L"%s %p %llu ", memtypeconvert(desc->Type), desc->PhysicalStart, desc->NumberOfPages);
-		if (desc->Attribute&EFI_MEMORY_UC) Print(L"UC ");
-		if (desc->Attribute&EFI_MEMORY_WC) Print(L"WC ");
-		if (desc->Attribute&EFI_MEMORY_WT) Print(L"WT ");
-		if (desc->Attribute&EFI_MEMORY_WB) Print(L"WB ");
-		if (desc->Attribute&EFI_MEMORY_UCE) Print(L"UCE ");
-		if (desc->Attribute&EFI_MEMORY_RP) Print(L"RP ");
-		if (desc->Attribute&EFI_MEMORY_WP) Print(L"WP ");
-		if (desc->Attribute&EFI_MEMORY_XP) Print(L"XP ");
-		if (desc->Attribute&EFI_MEMORY_RUNTIME) Print(L"RT ");
-		Print(L"\n");
-	}
-	#endif
+	// #ifdef DEBUG
+	// GetMMap(&mmap, &mmapsize, &mapkey, &descsize, &descver, &num_entries);
+	// register UINTN i = 0;
+	// for (;i < num_entries; i++) {
+	// 	register EFI_MEMORY_DESCRIPTOR *desc = MMAP(i);
+	// 	Print(L"%s %p %llu ", memtypeconvert(desc->Type), desc->PhysicalStart, desc->NumberOfPages);
+	// 	if (desc->Attribute&EFI_MEMORY_UC) Print(L"UC ");
+	// 	if (desc->Attribute&EFI_MEMORY_WC) Print(L"WC ");
+	// 	if (desc->Attribute&EFI_MEMORY_WT) Print(L"WT ");
+	// 	if (desc->Attribute&EFI_MEMORY_WB) Print(L"WB ");
+	// 	if (desc->Attribute&EFI_MEMORY_UCE) Print(L"UCE ");
+	// 	if (desc->Attribute&EFI_MEMORY_RP) Print(L"RP ");
+	// 	if (desc->Attribute&EFI_MEMORY_WP) Print(L"WP ");
+	// 	if (desc->Attribute&EFI_MEMORY_XP) Print(L"XP ");
+	// 	if (desc->Attribute&EFI_MEMORY_RUNTIME) Print(L"RT ");
+	// 	Print(L"\n");
+	// }
+	// #endif
 
 	register UINT8 attempts = 0;
 	asm volatile ("cli \n":::"memory");

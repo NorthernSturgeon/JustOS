@@ -1,4 +1,3 @@
-#include "lib/types.h"
 #include "lib/console.h"
 #include "lib/memory.h"
 #include "rtsvcs.h"
@@ -52,10 +51,9 @@ static const char* memtypeconvert(EFI_MEMORY_TYPE memtype){
 }
 */
 
-const boot_info_t *boot_info;
+uint64_t test_global_data = BAD_POINTER;
 
 void kmain(){
-	init_kernel_font((void*)boot_info);
 	init_video(boot_info->vram, boot_info->width, boot_info->height, boot_info->ppl, boot_info->format);
 	fill_rect(0, 0, 0, boot_info->width-1, boot_info->height-1);
 	/*
@@ -68,13 +66,13 @@ void kmain(){
 	//cr0_t cr0;
 	//read_reg(cr0.value, cr0);
 
-	printf("Hello from kernel!\n");
+	printf("Hello from dynamic kernel!\n");
 	printf("BTinfo: %p\n", boot_info);
 	printf("RTsvcs: %p\n", boot_info->rtsvcs);
 	printf("ACPIrp: %p\n", boot_info->acpi_rdsp);
 	printf("STACK : %p\n", boot_info->stack);
 	printf("STCKsz: %u\n", boot_info->stack_size);
-	printf("KRNLsz: %p\n", boot_info->kernel_size);
+	printf("KRNLsz: %u\n", boot_info->kernel_size);
 	printf("PTZONE: %p\n", boot_info->ptzone);
 	printf("PTZ_sz: %u\n", boot_info->ptzone_size);
 	printf("MMAP  : %p\n", boot_info->mmap);
@@ -104,14 +102,24 @@ void kmain(){
 	printf("gorl: \n");
 	for (size_t i = 0; i < gorl.lenght; i++){
 		set_color(0x00ff7f7f, 0);
-		printf("%p", gorl.list[i++]);
+		printf("%p ", gorl.list[i++]);
 
 		set_color(COLOR_WHITE, 0);
-		printf(" - ");
+		printf("%u kB - ", (gorl.list[i] - gorl.list[i-1])>>10);
+
+		//set_color(COLOR_WHITE, 0);
+		//printf(" - ");
 
 		set_color(0x007f7fff, 0);
-		printf("%p\n", gorl.list[i]);
+		printf("%p ", gorl.list[i]);
+
+		if (i < gorl.lenght - 1) {
+			set_color(COLOR_WHITE, 0);
+			printf("%u kB\n", (gorl.list[i+1] - gorl.list[i])>>10);
+		}
 	}
+	set_color(COLOR_WHITE, COLOR_BLACK);
+	//for (size_t i = 0; i < 200; i++) printf("Line speedtest: %u\n", i);
 
 	for(;;);
 	//_asm_ijmp();

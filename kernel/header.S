@@ -12,5 +12,9 @@
 	kentry:
 	and $-0x10, %rsp
 	lea __boot_info(%rip), %rax
-	mov %rax, boot_info(%rax)
+	mov %rax, boot_info(%rip)
 	jmp kmain
+
+.data
+	boot_info:
+	.quad 0

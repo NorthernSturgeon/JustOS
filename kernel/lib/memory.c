@@ -16,7 +16,8 @@ void* malloc(size_t size){
 
     size = to_pages(size);
     void* ptr = allocate_pages(size);
-    gorl.table[(uint64_t)virt_to_phys(ptr)>>12] = size;
+
+    if (ptr) gorl.table[(uint64_t)virt_to_phys(ptr)>>12] = size;
 
     return ptr;
 }

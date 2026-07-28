@@ -11,6 +11,6 @@ extern const uint8_t font_height;
 extern const uint8_t font_full_width;
 extern const uint8_t font_full_height;
 
-extern uint8_t *get_symbol_by_id(uint8_t *symbol_tab[], uint8_t sym_id);
+extern uint8_t *get_symbol_by_id(uint8_t* symbol_tab[], uint8_t sym_id);
 
 #endif

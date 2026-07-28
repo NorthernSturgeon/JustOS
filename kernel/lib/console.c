@@ -36,6 +36,7 @@ struct console_info get_console_info(void){
 	return cs;
 }
 
+//deprecated
 void _puts(const char *str, char c){
 	struct screen_resolution sr = get_res();
 	uint16_t w = sr.width;
@@ -60,6 +61,7 @@ void _puts(const char *str, char c){
 
 #define puts(s) _puts(s, 0)
 
+//to be refactored
 void printf(const char *str, ...){
 	uint64_t u_buffer;
 	unsigned char p_buffer[8] = {0};

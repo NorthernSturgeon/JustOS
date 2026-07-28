@@ -36,9 +36,9 @@ void optimize_gorl(){
 void mark_free(void* ptr, size_t size){
 	uint64_t start = (uint64_t)ptr;
 	uint64_t end = start+size;
-	rwlock_lock(&gorl.rwlock);
-
 	size_t place = 0, j = 0;
+
+	rwlock_lock(&gorl.rwlock);
 	// remove zero-lenght
 	optimize_gorl();
 
@@ -68,9 +68,7 @@ void mark_free(void* ptr, size_t size){
 
 		// absorb and fix right border
 		for (size_t i = place + 1; i < gorl.lenght; i++){
-			if (gorl.list[i] <= end){ // absorb
-				gorl.list[i] = MARKER;
-			} else {
+			if (gorl.list[i] > end){
 				// i even [A(p-1), Bp=end, ..., Ai>end] => ok!
 				if (i&1){ // i odd [A(p-1), Bp=end, ..., A(i-1)<=end (erased), Bi>end]
 					gorl.list[place] = MARKER;
@@ -78,6 +76,8 @@ void mark_free(void* ptr, size_t size){
 				}
 				break;
 			}
+			//gorl.list[i] <= end -> absorb
+			gorl.list[i] = MARKER;
 		}
 
 		// remove marked
@@ -95,9 +95,9 @@ void mark_free(void* ptr, size_t size){
 void mark_busy(void* ptr, size_t size){
 	uint64_t start = (uint64_t)ptr;
 	uint64_t end = start+size;
-	rwlock_lock(&gorl.rwlock);
-
 	size_t place = 0, j = 0;
+
+	rwlock_lock(&gorl.rwlock);
 	// remove zero-lenght
 	optimize_gorl();
 
@@ -132,9 +132,7 @@ void mark_busy(void* ptr, size_t size){
 			absorb:
 			// absorb and fix right border
 			for (size_t i = place + 1; i < gorl.lenght; i++){
-				if (gorl.list[i] <= end){ // absorb
-					gorl.list[i] = MARKER;
-				} else {
+				if (gorl.list[i] > end){
 					// i odd [B(p-1), Ap=end, ..., Bi>end] => ok!
 					if (!(i&1)){ // i even [B(p-1), Ap=end, ..., B(i-1)<=end (erased), Ai>end]
 						gorl.list[place] = MARKER;
@@ -142,6 +140,8 @@ void mark_busy(void* ptr, size_t size){
 					}
 					break;
 				}
+				//gorl.list[i] <= end -> absorb
+				gorl.list[i] = MARKER;
 			}
 
 			// remove marked
@@ -301,7 +301,7 @@ void init_mm(){
 
 	//NULLPTR!
 	if (!gorl.table){
-		printf("FATAL: not enough memory for size's tables\n");
+		printf("FATAL: not enough memory for size table\n");
 		for(;;);
 	}
 

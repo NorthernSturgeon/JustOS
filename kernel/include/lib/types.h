@@ -24,6 +24,7 @@ typedef _Bool bool;
 
 #define asm __asm__
 
+#define __export __attribute__((used,visibility("default")))
 #define __always_inline __attribute__((always_inline))
 #define __noinline __attribute__((noinline))
 #define __packed __attribute__((__packed__))

@@ -1557,7 +1557,7 @@ volatile void* font_symbol_table[] = {
 	&undefined
 };
 
-// min max addend
+// min max substract
 static uint8_t font_offset_table[1][3] = {
 	{0x20,0x7e,0x20}
 };

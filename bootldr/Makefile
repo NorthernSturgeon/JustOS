@@ -1,6 +1,6 @@
 include ../local.env
 
-C_SOURCES := video.c console.c font.c tsv.c bootloader.c
+C_SOURCES := video.c console.c font.c xxhash64.c hashtab.c elf.c dynlink.c tsv.c bootloader.c
 ASM_SOURCES := final.S mem.S
 OBJECTS := $(C_SOURCES:.c=.c.o) $(ASM_SOURCES:.S=.S.o)
 OUT_DIR := out
