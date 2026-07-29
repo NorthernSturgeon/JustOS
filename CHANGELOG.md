@@ -1,4 +1,5 @@
 [v0.0.5]
+- Fixed incorrect implementation of min-heap for page allocator
 - Optimizations and bugfixes...
 
 [v0.0.5-alpha]

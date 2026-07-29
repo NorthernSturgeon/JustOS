@@ -1,4 +1,3 @@
-#include "lib/types.h"
 #include "lib/font.h"
 #include "video.h"
 
@@ -29,19 +28,19 @@ void init_video(void* vram_ptr, uint16_t w, uint16_t h, uint16_t ppl, uint16_t f
 	scanline = ppl;
 }
 
-struct screen_resolution __attribute__((visibility("default"))) get_res(){
+struct screen_resolution __export get_res(){
 	struct screen_resolution sr;
 	sr.width = width;
 	sr.height = height;
 	return sr;
 }
 
-void __attribute__((visibility("default"))) draw_pixel(uint32_t color, uint16_t x, uint16_t y){
+void __export draw_pixel(uint32_t color, uint16_t x, uint16_t y){
 	color_correct(&color);
 	vram[scanline*y+x] = color;
 }
 
-void __attribute__((visibility("default"))) fill_rect(uint32_t color, uint16_t x, uint16_t y, uint16_t w, uint16_t h){
+void __export fill_rect(uint32_t color, uint16_t x, uint16_t y, uint16_t w, uint16_t h){
 	color_correct(&color);
     uint32_t *where = vram + (uint32_t)scanline * y + x;
     for (uint16_t cy = 0; cy < h; cy++) {
@@ -52,7 +51,7 @@ void __attribute__((visibility("default"))) fill_rect(uint32_t color, uint16_t x
     }
 }
 
-void __attribute__((visibility("default"))) draw_by_font_bitmap(uint8_t bitmap[] ,uint32_t color, uint16_t x, uint16_t y){
+void __export draw_by_font_bitmap(uint8_t bitmap[] ,uint32_t color, uint16_t x, uint16_t y){
 	// cx - current x, cy - current y
 	color_correct(&color);
     uint32_t *where = vram + (uint32_t)scanline * y + x;

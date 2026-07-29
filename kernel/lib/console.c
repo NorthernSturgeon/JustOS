@@ -1,5 +1,3 @@
-#include "lib/types.h"
-//#include "lib/memory.h"
 #include <stdarg.h>
 #include "lib/font.h"
 #include "video.h"

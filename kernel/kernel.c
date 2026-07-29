@@ -6,7 +6,7 @@
 #include "video.h"
 //#include "register.h"
 
-extern void _asm_ijmp(void);
+extern void asm_hlt(void);
 /*
 typedef struct {
 	uint16_t limit;
@@ -92,11 +92,11 @@ void kmain(){
 	printf("Initializing memory manager...\n");
 	init_mm();
 
-	set_color(COLOR_GRAY, COLOR_BLACK);
-	printf("base             | lenght           | type | attr\n");
-	for(size_t i=0; i < e820_len; i++){
-		printf("%p | %p | %u    | %u\n" , e820[i].base, e820[i].lenght, e820[i].type, e820[i].attr);
-	}
+	// set_color(COLOR_GRAY, COLOR_BLACK);
+	// printf("base             | lenght           | type | attr\n");
+	// for(size_t i=0; i < e820_len; i++){
+	// 	printf("%p | %p | %u    | %u\n" , e820[i].base, e820[i].lenght, e820[i].type, e820[i].attr);
+	// }
 
 	set_color(COLOR_WHITE, COLOR_BLACK);
 	printf("gorl: \n");
@@ -105,7 +105,7 @@ void kmain(){
 		printf("%p ", gorl.list[i++]);
 
 		set_color(COLOR_WHITE, 0);
-		printf("%u kB - ", (gorl.list[i] - gorl.list[i-1])>>10);
+		printf("%u p - ", (gorl.list[i] - gorl.list[i-1])>>12);
 
 		//set_color(COLOR_WHITE, 0);
 		//printf(" - ");
@@ -115,13 +115,13 @@ void kmain(){
 
 		if (i < gorl.lenght - 1) {
 			set_color(COLOR_WHITE, 0);
-			printf("%u kB\n", (gorl.list[i+1] - gorl.list[i])>>10);
+			printf("%u p\n", (gorl.list[i+1] - gorl.list[i])>>12);
 		}
 	}
 	set_color(COLOR_WHITE, COLOR_BLACK);
 	//for (size_t i = 0; i < 200; i++) printf("Line speedtest: %u\n", i);
 
-	for(;;);
-	//_asm_ijmp();
+	//for(;;);
+	asm_hlt();
 	//boot_info->rtsvcs->ResetSystem(EfiResetShutdown, EFI_SUCCESS, 0, NULL);
 }

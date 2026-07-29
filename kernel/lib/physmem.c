@@ -49,15 +49,15 @@ void mark_free(void* ptr, size_t size){
 		//insert based on start and fix left border
 		for (size_t i = 0; i < gorl.lenght; i++){
 			if (gorl.list[i] >= start){
-				if (i&1){ // i odd [A(i-1)<start, Bi >= start]
+				if (i&1){ // i odd [F(i-1)<start, Bi >= start]
 					memmove(&gorl.list[i+1], &gorl.list[i-1], (gorl.lenght-i+1)*sizeof(uint64_t));
-					// i odd [A(i-1) < start, Im A=start, Bi=end, A(i+1)>=start (possibly wba)]
+					// i odd [F(i-1) < start, Im F=start, Bi=end, F(i+1)>=start (possibly wba)]
 					i--;
-					// i even [Ai < start, Im A=start, B(i+1)=end, A(i+2)>=start (possibly wba)]
-				} else { // i even [B(i-1)<start, Ai >= start]
+					// i even [Fi < start, Im F=start, B(i+1)=end, F(i+2)>=start (possibly wba)]
+				} else { // i even [B(i-1)<start, Fi >= start]
 					memmove(&gorl.list[i+2], &gorl.list[i], (gorl.lenght-i)*sizeof(uint64_t));
 					gorl.list[i] = start;
-					// i even [B(i-1)<start, Ai=start, B(i+1)=end, A(i+2)>=start (possibly wba)]
+					// i even [B(i-1)<start, Fi=start, B(i+1)=end, F(i+2)>=start (possibly wba)]
 				}
 				gorl.list[++i] = end;
 				gorl.lenght += 2;
@@ -69,10 +69,10 @@ void mark_free(void* ptr, size_t size){
 		// absorb and fix right border
 		for (size_t i = place + 1; i < gorl.lenght; i++){
 			if (gorl.list[i] > end){
-				// i even [A(p-1), Bp=end, ..., Ai>end] => ok!
-				if (i&1){ // i odd [A(p-1), Bp=end, ..., A(i-1)<=end (erased), Bi>end]
+				// i even [F(p-1), Bp=end, ..., Fi>end] => ok!
+				if (i&1){ // i odd [F(p-1), Bp=end, ..., F(i-1)<=end (erased), Bi>end]
 					gorl.list[place] = MARKER;
-					// [A(p-1), Bp=end (erased), ..., A(i-1)<=end (erased), Bi>end]
+					// [F(p-1), Bp=end (erased), ..., F(i-1)<=end (erased), Bi>end]
 				}
 				break;
 			}
@@ -103,7 +103,7 @@ void mark_busy(void* ptr, size_t size){
 
 	// must intersect with
 	if (end > gorl.list[0] && start < gorl.list[gorl.lenght-1]) {
-		// special case: start below A(first) -> avoid i=0
+		// special case: start below F(first) -> avoid i=0
 		if (gorl.list[0] >= start && end < gorl.list[gorl.lenght-1]) {
 			gorl.list[0] = end;
 			goto absorb;
@@ -112,19 +112,19 @@ void mark_busy(void* ptr, size_t size){
 			//insert based on start and fix left border
 			for (size_t i = 1; i < gorl.lenght; i++){
 				if (gorl.list[i] >= start){
-					if (i&1){ // i odd [A(i-1)<start, Bi >= start]
+					if (i&1){ // i odd [F(i-1)<start, Bi >= start]
 						memmove(&gorl.list[i+2], &gorl.list[i], (gorl.lenght-i)*sizeof(uint64_t));
 						gorl.list[i] = start;
-						// i odd [A(i-1)<start, Bi=start, A(i+1)=end, B(i+2)>=start (possibly wba)]
-					} else { // i even [B(i-1)<start, Ai >= start], unsafe if i=0
+						// i odd [F(i-1)<start, Bi=start, F(i+1)=end, B(i+2)>=start (possibly wba)]
+					} else { // i even [B(i-1)<start, Fi >= start], unsafe if i=0
 						memmove(&gorl.list[i+1], &gorl.list[i-1], (gorl.lenght-i+1)*sizeof(uint64_t));
-						// i even [B(i-1) < start, Im B=start, Ai=end, B(i+1)>=start (possibly wba)]
+						// i even [B(i-1) < start, Im B=start, Fi=end, B(i+1)>=start (possibly wba)]
 						i--;
-						// i odd [Bi < start, Im B=start, A(i+1)=end, B(i+2)>=start (possibly wba)]
+						// i odd [Bi < start, Im B=start, F(i+1)=end, B(i+2)>=start (possibly wba)]
 					}
 					gorl.list[++i] = end;
 					gorl.lenght += 2;
-					place = i; // Ap=end (always even), never last element
+					place = i; // Fp=end (always even), never last element
 					break;
 				}
 			}
@@ -133,10 +133,10 @@ void mark_busy(void* ptr, size_t size){
 			// absorb and fix right border
 			for (size_t i = place + 1; i < gorl.lenght; i++){
 				if (gorl.list[i] > end){
-					// i odd [B(p-1), Ap=end, ..., Bi>end] => ok!
-					if (!(i&1)){ // i even [B(p-1), Ap=end, ..., B(i-1)<=end (erased), Ai>end]
+					// i odd [B(p-1), Fp=end, ..., Bi>end] => ok!
+					if (!(i&1)){ // i even [B(p-1), Fp=end, ..., B(i-1)<=end (erased), Fi>end]
 						gorl.list[place] = MARKER;
-						// [B(p-1), Ap=end (erased), ..., B(i-1)<=end (erased), Ai>end]
+						// [B(p-1), Fp=end (erased), ..., B(i-1)<=end (erased), Fi>end]
 					}
 					break;
 				}
@@ -151,7 +151,7 @@ void mark_busy(void* ptr, size_t size){
 			}
 			gorl.lenght = j;
 
-			// special case: B(last) <= end -> remove Ap=end
+			// special case: B(last) <= end -> remove Fp=end
 			// lenght must be even
 			gorl.lenght -= gorl.lenght&1;
 		}
@@ -168,18 +168,14 @@ typedef struct __packed{
 //min-heap
 static inline void heapify(heapq_t *heap, size_t i, size_t size){
 	heapq_t current = heap[i];
-	size_t smallest = i;
+	size_t child;
 	
-	while(1){
-		size_t left = 2*i + 1;
-		size_t right = 2*i + 2; //is `right = left + 1;` better?
+	while((child = 2*i + 1) < size){
+		if (child + 1 < size && heap[child+1].key < heap[child].key) child++;
+		if (!(heap[child].key < current.key)) break;
 
-		if (left < size && heap[left].key < heap[smallest].key) smallest = left;
-		if (right < size && heap[right].key < heap[smallest].key) smallest = right;
-		if (smallest == i) break;
-
-		heap[i] = heap[smallest];
-		i = smallest;
+		heap[i] = heap[child];
+		i = child;
 	}
 	heap[i] = current;
 }
@@ -207,11 +203,11 @@ void* allocate_pages(size_t size){
 			atomic_load_explicit(&gorl.list[i+1], __ATOMIC_RELAXED) - atomic_load_explicit(&gorl.list[i], __ATOMIC_RELAXED);
 	}
 
-	for(size_t i = heap_size/2 + 1; i > 0;){
+	for(size_t i = heap_size/2; i > 0;){
 		heapify(heapq, --i, heap_size);
 	}
 
-	while (heap_size > 0){
+	while (heap_size){
 		size_t i = get_min(heapq, &heap_size);
 		do {
 			result = atomic_load(&gorl.list[i]);
@@ -221,7 +217,6 @@ void* allocate_pages(size_t size){
 		next:
 	}
 	result = (uint64_t)NULL;
-
 exit:
 	rwlock_dec(&gorl.rwlock);
 	return (void*)result;
@@ -297,7 +292,7 @@ void init_mm(){
 	size_t st_size = to_pages((size_t)virt_to_phys(gorl.list[gorl.lenght-1]) >> 9);
 	gorl.table = allocate_pages(st_size);
 
-	printf("size table: %p, %u pages\n", gorl.table, st_size);
+	printf("size table: %p, %u pages, %u kB\n", gorl.table, st_size, st_size << 2);
 
 	//NULLPTR!
 	if (!gorl.table){
