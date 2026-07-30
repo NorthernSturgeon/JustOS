@@ -4,16 +4,20 @@
 
 .text
 	__boot_info:
-		.rept 11
+		.rept 14
 		.quad 0
-		.endr
-		.rept 4
-		.word 0
 		.endr
 	kentry:
 		and $-0x10, %rsp
 		lea __boot_info(%rip), %rax
 		mov %rax, boot_info(%rip)
+
+		mov $0xC0000101, %ecx
+		xor %edx, %edx
+		not %edx
+		mov $-8, %eax
+		wrmsr
+
 		jmp kmain
 	asm_hlt:
 		hlt

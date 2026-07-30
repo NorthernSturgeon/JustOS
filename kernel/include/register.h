@@ -80,6 +80,10 @@ typedef union{
 #define IA32_CSTAR 0xC0000083
 #define IA32_SFMASK 0xC0000084
 
+#define IA32_FS_BASE 0xC0000100
+#define IA32_GS_BASE 0xC0000101
+#define IA32_KERNEL_GS_BASE 0xC0000102
+
 typedef union{
 	uint64_t value;
 	struct {
@@ -99,5 +103,19 @@ typedef union{
 
 //extern uint64_t _rdmsr(uint32_t msr);
 //extern void _wrmsr(uint32_t msr, uint64_t value);
+
+#define rdmsr(m, t) asm ( \
+	"rdmsr \n\t" \
+	"shlq $32, %%rdx \n\t" \
+	"orq %%rdx, %%rax \n\t" \
+	: "=a"(t) : "c"((uint32_t)m) \
+	: "%rdx", "cc")
+
+#define wrmsr(m, t) asm ( \
+	"movq %0, %%rdx \n\t" \
+	"shr $32, %%rdx \n\t" \
+	"wrmsr \n\t" \
+	:: "a"((uint64_t)t), "c"((uint32_t)m) \
+	: "%rdx", "cc")
 
 #endif

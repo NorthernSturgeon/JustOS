@@ -11,7 +11,8 @@ CFLAGS := -c -I /usr/local/include/efi \
 	-I /usr/local/include/efi/protocol \
 	-fno-stack-protector -fshort-wchar \
 	-mno-red-zone -Wall -Wextra -Werror \
-	-fpic -Wno-maybe-uninitialized -Wno-unused-function -DEFI_FUNCTION_WRAPPER
+	-fpic -Wno-maybe-uninitialized -Wno-address-of-packed-member \
+	-Wno-unused-function -DEFI_FUNCTION_WRAPPER
 
 LDFLAGS := /usr/local/lib/crt0-efi-x86_64.o -nostdlib -znocombreloc \
 	-T /usr/local/lib/elf_x86_64_efi.lds \

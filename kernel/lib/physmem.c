@@ -285,8 +285,13 @@ void init_mm(){
 	mark_busy(phys_to_virt(NULL), 1u<<20); // first megabyte
 	mark_busy(boot_info->ptzone, round_to(total, 4096)); // page tables and after
 
-	printf("kernel: %p, %u bytes\n", (void*)((((uint64_t)boot_info)&(~0xfffull))-4096), round_to(boot_info->kernel_size, 4096));
-	mark_busy((void*)((((uint64_t)boot_info)&(~0xfffull))-4096), round_to(boot_info->kernel_size, 4096)); // kernel
+	printf("init_mm: file_table %p count %u\n", boot_info->files, boot_info->files_cnt);
+	mark_busy(boot_info->files, round_to(boot_info->files_cnt*sizeof(loaded_file), 4096));
+	for (size_t i = 0; i < boot_info->files_cnt; i++){
+		printf("init_mm: file %s addr %p size %u\n", boot_info->files[i].name, boot_info->files[i].data, boot_info->files[i].size);
+		mark_busy(boot_info->files[i].data, round_to(boot_info->files[i].size, 4096));
+	}
+
 	mark_busy(boot_info->stack, boot_info->stack_size); // kernel stack
 
 	size_t st_size = to_pages((size_t)virt_to_phys(gorl.list[gorl.lenght-1]) >> 9);

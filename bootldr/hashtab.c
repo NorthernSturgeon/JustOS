@@ -16,7 +16,7 @@ static inline ht_entry_t* index(ht_entry_t *table, size_t i, size_t ts){
 	return (ht_entry_t*)((uint8_t*)table + ts*i);
 }
 
-static inline ht_entry_t* ht_index(hashtab_t *tab, size_t i){
+ht_entry_t* ht_index(hashtab_t *tab, size_t i){
 	return index(tab->table, i, tab->totalsize);
 }
 

@@ -17,7 +17,7 @@ KERNEL_CFLAGS := $(CFLAGS)
 
 LIBC_CFLAGS := $(CFLAGS)
 
-KERNEL_LDFLAGS := -nostdlib -z relro -z now -I JUSTOS/bootx64.efi -pie --export-dynamic -T script.lds
+KERNEL_LDFLAGS := -nostdlib -z relro -z now --warn-unresolved-symbols -h '\JUSTOS\kernel.elf' -I JUSTOS/bootx64.efi -pic --export-dynamic -T script.lds
 
 LIBC_LDFLAGS := -nostdlib -z relro -z now -h '\JUSTOS\libc.so' -shared -T libc.lds
 

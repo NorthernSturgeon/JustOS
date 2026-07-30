@@ -78,9 +78,22 @@ static libid_weakptr get_file(hashtab_t *const ctx, char* path){
 	//Print(L"NL rela: %p\n", nl.rela);
 	//Print(L"NL relacnt: %p\n", nl.relacnt);
 
+	Elf64_Shdr* percpu = get_section_by_name(nl.image, ".percpu");
+	if (percpu){
+		*(uint64_t*)(nl.image + 0x0ff8) = (uint64_t)CONV_PTR(nl.image + percpu->sh_addr);
+	}
+
 	foreach_needed(nl.dynamic, 
 		nl.neededcnt++;
 	)
+
+	nl.soname = NULL;
+	for (Elf64_Dyn *c = nl.dynamic; c->d_tag != DT_NULL; c++) {
+		if (c->d_tag == DT_SONAME) {
+			nl.soname = CONV_PTR(&nl.dynstr[c->d_un.d_val]);
+			break;
+		}
+	}
 
 	if ((ret = ht_insert(&loaded_libs, path, &nl))){ 
 		parse_exports(ctx, &nl);
@@ -122,10 +135,16 @@ static void resolve(hashtab_t *const ctx, libid_t *lib){
 			case R_X86_64_GLOB_DAT:
 				//Print(L"GLOB_DAT\n");
 				char *symname = &lib->dynstr[lib->dynsym[ELF64_R_SYM(lib->rela[i].r_info)].st_name];
-				symbol_t *target = ht_read(ctx, symname);
-				if (!target && ctx != &global_exports) target = ht_read(&global_exports, symname);
-				if (!target) Fatality(LDR_ELF, 24);
-				*(uint64_t*)got_entry = target->addr + lib->rela[i].r_addend;
+
+				if (strcmpa(symname,"_DTV_")) {
+					symbol_t *target = ht_read(ctx, symname);
+					if (!target && ctx != &global_exports) target = ht_read(&global_exports, symname);
+					if (!target) Fatality(LDR_ELF, 24);
+					*(uint64_t*)got_entry = target->addr + lib->rela[i].r_addend;
+				} else {
+					Print(L"new _DTV_:%p\n", CONV_PTR(lib->image + 0x1000));
+					*(uint64_t*)got_entry = (uint64_t)CONV_PTR(lib->image + 0x1000);
+				}
 				break;
 			case R_X86_64_NONE:
 				//Print(L"NONE\n");
@@ -166,7 +185,28 @@ libid_weakptr dl_process(char *path, const bool global_f){
 	return module;
 }
 
-void dl_fini(){
+#define ALLOC_KPAGES(ptr, size) uefi_call_wrapper(BS->AllocatePages, 4, AllocateAnyPages, EfiLoaderData, size, ptr)
+static inline size_t div_up(size_t a, size_t b) { return (a+b-1)/b; }
+#define TO_PAGES(ptr) div_up(ptr, 4096)
+
+void dl_fini(loaded_file **files, size_t *files_cnt){
 	ht_destroy(&global_exports);
+
+	*files_cnt = 0;
+	if (ALLOC_KPAGES(files, TO_PAGES(loaded_libs.entries*sizeof(loaded_file))) == EFI_SUCCESS){
+		for (size_t i = 0; i < loaded_libs.capacity; i++){
+			ht_entry_t* ent = ht_index(&loaded_libs, i);
+			if (ent->key){
+				libid_t *lib = (libid_t*)((uint8_t*)ent + sizeof(ht_entry_t));
+				(*files)[*files_cnt].name = lib->soname;
+				(*files)[*files_cnt].data = CONV_PTR(lib->image);
+				(*files)[*files_cnt].size = lib->imagesize;
+				(*files_cnt)++;
+			}
+		}
+	} else {
+		*files = NULL;
+	}
+
 	ht_destroy(&loaded_libs);
 }

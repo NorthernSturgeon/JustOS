@@ -28,5 +28,6 @@ typedef _Bool bool;
 #define __always_inline __attribute__((always_inline))
 #define __noinline __attribute__((noinline))
 #define __packed __attribute__((__packed__))
+#define __naked __attribute__((naked))
 
 #endif

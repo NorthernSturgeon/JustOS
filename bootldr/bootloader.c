@@ -60,6 +60,8 @@ typedef struct __attribute__((__packed__)){
 	UINT64 ptzone_size;
 	e820_entry_t *mmap;
 	UINT64 mmap_len;
+	loaded_file *files;
+	size_t files_cnt;
 	VOID *vram;
 	UINT64 vram_size;
 	UINT16 width;
@@ -303,7 +305,7 @@ static VOID convert_mmap_to_e820(boot_info_t *boot_info, EFI_MEMORY_DESCRIPTOR *
 		}
 	}
 	boot_info->mmap = e820_table;
-	boot_info->mmap_len = num_entries -  bad_descs;
+	boot_info->mmap_len = num_entries - bad_descs;
 }
 
 static VOID alloc_page(boot_info_t *boot_info, virt_addr_t vaddr, UINT64 *free_ptzonesz, UINT16 pml4offset, uint64_t attr){
@@ -505,6 +507,9 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 	
 	//EXIT BOOT SERVICES
 	//uefi_call_wrapper(ST->ConOut->ClearScreen, 1, ST->ConOut);
+
+	dl_fini(&boot_info.files, &boot_info.files_cnt);
+	boot_info.files = CONV_PTR(boot_info.files);
 
 	EFI_MEMORY_DESCRIPTOR *mmap;
 	UINTN mmapsize=1, mapkey, descsize, num_entries;

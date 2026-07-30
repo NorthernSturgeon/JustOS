@@ -4,7 +4,8 @@
 #include "boot.h"
 #include "lib/font.h"
 #include "video.h"
-//#include "register.h"
+#include "register.h"
+#include "tls.h"
 
 extern void asm_hlt(void);
 /*
@@ -51,7 +52,7 @@ static const char* memtypeconvert(EFI_MEMORY_TYPE memtype){
 }
 */
 
-uint64_t test_global_data = BAD_POINTER;
+uint64_t _thread test_thread_data = 0x0102030405060708ull;
 
 void kmain(){
 	init_video(boot_info->vram, boot_info->width, boot_info->height, boot_info->ppl, boot_info->format);
@@ -115,11 +116,20 @@ void kmain(){
 
 		if (i < gorl.lenght - 1) {
 			set_color(COLOR_WHITE, 0);
-			printf("%u p\n", (gorl.list[i+1] - gorl.list[i])>>12);
+			printf("%u p", (gorl.list[i+1] - gorl.list[i])>>12);
 		}
+
+		printf("\n");
 	}
 	set_color(COLOR_WHITE, COLOR_BLACK);
 	//for (size_t i = 0; i < 200; i++) printf("Line speedtest: %u\n", i);
+
+	uint64_t gsbase;
+	rdmsr(IA32_GS_BASE, gsbase);
+	printf("GS BASE: %p\n", gsbase);
+
+	printf("TLS TEST: %p\n", *tls_ptr(test_thread_data));
+	//printf("TLS TEST: %p\n", test_global_data);
 
 	//for(;;);
 	asm_hlt();

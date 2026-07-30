@@ -19,4 +19,6 @@ extern void* ht_insert(hashtab_t* restrict tab, const char* restrict key, void* 
 extern void* ht_read(hashtab_t* restrict tab, const char* restrict name);
 extern void ht_destroy(hashtab_t *tab);
 
+extern ht_entry_t* ht_index(hashtab_t *tab, size_t i);
+
 #endif

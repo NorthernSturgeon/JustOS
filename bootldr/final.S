@@ -67,9 +67,10 @@
 		movw $0x10, %ax
 		movw %ax, %ds
 		movw %ax, %es
+		movw %ax, %ss
+		xorw %ax, %ax
 		movw %ax, %fs
 		movw %ax, %gs
-		movw %ax, %ss
 		pushq $8
 		pushq %rsi
 		lretq 
