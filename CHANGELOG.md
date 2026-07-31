@@ -1,10 +1,12 @@
 # THE CHANGELOG (and prospect)
     of the JUSTOS
 
-## [v0.0.6] / NET: 2026-08-01
+## [v0.0.6] / 2026-07-31
+- Beautiful CHANGELOG
 - TLS correct support
 - Using standard header files for integer types
 - *`physmem.c`* is now a part of kernel, not libc
+- Cosmetic changes...
 
 ## [v0.0.6-alpha]() / 2026-07-30
 - TLS support prototype

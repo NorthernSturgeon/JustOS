@@ -4,7 +4,6 @@ ENTRY(kentry)
 SECTIONS{
 	. = 0x1000;
 	.text ALIGN(4096):{
-		PROVIDE_HIDDEN(_DTV_ = .);
 		*(.text)
 	}
 	.data ALIGN(4096):{ *(.data) *(.bss)}

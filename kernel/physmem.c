@@ -288,8 +288,10 @@ void init_mm(){
 	printf("init_mm: file_table %p count %u\n", boot_info->files, boot_info->files_cnt);
 	mark_busy(boot_info->files, round_to(boot_info->files_cnt*sizeof(loaded_file), 4096));
 	for (size_t i = 0; i < boot_info->files_cnt; i++){
-		printf("init_mm: file %s addr %p size %u\n", boot_info->files[i].name, boot_info->files[i].data, boot_info->files[i].size);
-		mark_busy(boot_info->files[i].data, round_to(boot_info->files[i].size, 4096));
+		loaded_file *file = &boot_info->files[i];
+		printf("init_mm: file %s @ %p / %u b, TLS@%p / %u b\n", file->name, file->data, file->size, file->tls_area, file->tls_size);
+		mark_busy(file->data, round_to(file->size, 4096));
+		if (file->tls_area)	mark_busy(file->tls_area, round_to(file->tls_size, 4096));
 	}
 
 	mark_busy(boot_info->stack, boot_info->stack_size); // kernel stack

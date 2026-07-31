@@ -8,6 +8,8 @@ typedef struct __packed{
 	char* name;
 	void* data;
 	size_t size;
+	void* tls_area;
+	size_t tls_size;
 } loaded_file;
 
 typedef struct __packed{
