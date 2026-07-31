@@ -1,16 +1,16 @@
-#include "lib/memory.h"
 #include "lib/string.h"
 #include "lib/atomic.h"
 #include "lib/console.h"
 #include <alloca.h>
+#include "physmem.h"
 #include "boot.h"
 
 #define MARKER __UINT64_MAX__
 
-gorl_t gorl;
+__export gorl_t gorl;
 
-e820_entry_t *e820;
-size_t e820_len;
+__export e820_entry_t *e820;
+__export size_t e820_len;
 
 static uint64_t round_to(uint64_t n, uint64_t k){
 	return n + (n%k ? k - (n%k) : 0);
@@ -188,7 +188,7 @@ static inline uint64_t get_min(heapq_t *heap, size_t *size){
 }
 
 //size in pages
-void* allocate_pages(size_t size){
+__export void* allocate_pages(size_t size){
 	size <<= 12;
 	uint64_t result;
 
@@ -223,7 +223,7 @@ exit:
 }
 
 //size in pages
-void free_pages(void* ptr, size_t size){
+__export void free_pages(void* ptr, size_t size){
 	size <<= 12;
 
 	rwlock_inc(&gorl.rwlock);
@@ -288,8 +288,10 @@ void init_mm(){
 	printf("init_mm: file_table %p count %u\n", boot_info->files, boot_info->files_cnt);
 	mark_busy(boot_info->files, round_to(boot_info->files_cnt*sizeof(loaded_file), 4096));
 	for (size_t i = 0; i < boot_info->files_cnt; i++){
-		printf("init_mm: file %s addr %p size %u\n", boot_info->files[i].name, boot_info->files[i].data, boot_info->files[i].size);
-		mark_busy(boot_info->files[i].data, round_to(boot_info->files[i].size, 4096));
+		loaded_file *file = &boot_info->files[i];
+		printf("init_mm: file %s @ %p / %u b, TLS@%p / %u b\n", file->name, file->data, file->size, file->tls_area, file->tls_size);
+		mark_busy(file->data, round_to(file->size, 4096));
+		if (file->tls_area)	mark_busy(file->tls_area, round_to(file->tls_size, 4096));
 	}
 
 	mark_busy(boot_info->stack, boot_info->stack_size); // kernel stack

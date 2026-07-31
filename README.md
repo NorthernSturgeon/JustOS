@@ -4,7 +4,7 @@ My operating system for x86-64
 ## About
 An OS from an amateur developer with very serious intentions
 
-## Project timeline
+## Project timeline (outdated)
 + \[🌱 Origin] 09.02.2022 — Birth of concept  
 + \[🚀 Launch] 12.07.2025 — First release: bootloader works!  
 + ...

@@ -27,6 +27,8 @@ typedef struct __attribute__((__packed__)){
 	char* name;
 	void* data;
 	size_t size;
+	void* tls_area;
+	size_t tls_size;
 } loaded_file;
 
 #define weakptr(t) t*
@@ -35,7 +37,7 @@ typedef libid_t* libid_weakptr;
 typedef symbol_t* symbol_weakptr;
 
 extern void dl_init(EFI_FILE_HANDLE workdir);
-extern libid_weakptr dl_process(char *path, const bool global_f);
+extern libid_weakptr dl_process(char *path, const BOOLEAN global_f);
 extern void dl_fini(loaded_file **files, size_t *files_cnt);
 
 #endif

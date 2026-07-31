@@ -2,6 +2,10 @@
 .globl memset
 .globl memmove
 
+.type memcpy, STT_FUNC
+.type memset, STT_FUNC
+.type memmove, STT_FUNC
+
 .text
 	memcpy:
 		endbr64

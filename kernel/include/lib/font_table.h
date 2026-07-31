@@ -931,7 +931,6 @@ static uint8_t backslash[13] = {
 };
 
 static uint8_t at[13] = {
-0b00000000,
 0b01111100,
 0b10000010,
 0b10000010,
@@ -944,6 +943,7 @@ static uint8_t at[13] = {
 0b10000000,
 0b10000010,
 0b01111100,
+0b00000000
 };
 
 static uint8_t undefined[13] = {

@@ -2,6 +2,7 @@
 #define __RTSVCS_H__
 
 #define ovmf_r11337
+#define _ms_abi __attribute__((ms_abi))
 
 #define EFI_ERROR(a)(((int64_t)a)<0)
 #define EFIERR(a)(0x8000000000000000|a)
@@ -104,7 +105,7 @@ typedef struct {
 	uint64_t Attribute; // Field size is 64 bits
 } EFI_MEMORY_DESCRIPTOR;
 
-typedef int64_t (__attribute__((ms_abi)) *EFI_SET_VIRTUAL_ADDRESS_MAP) (
+typedef int64_t (_ms_abi *EFI_SET_VIRTUAL_ADDRESS_MAP) (
 	uint64_t MemoryMapSize,
 	uint64_t DescriptorSize,
 	uint32_t DescriptorVersion,
@@ -115,7 +116,7 @@ typedef int64_t (__attribute__((ms_abi)) *EFI_SET_VIRTUAL_ADDRESS_MAP) (
 #define EFI_INTERNAL_FNC 0x00000002 // Pointer to internal runtime fnc
 #define EFI_INTERNAL_PTR 0x00000004 // Pointer to internal runtime data
 
-typedef int64_t (__attribute__((ms_abi)) *EFI_CONVERT_POINTER) (
+typedef int64_t (_ms_abi *EFI_CONVERT_POINTER) (
 	uint64_t DebugDisposition,
 	void **Address
 );
@@ -131,7 +132,7 @@ typedef int64_t (__attribute__((ms_abi)) *EFI_CONVERT_POINTER) (
 #define EFI_VARIABLE_APPEND_WRITE 0x00000040
 #define EFI_MAXIMUM_VARIABLE_SIZE 1024
 
-typedef int64_t (__attribute__((ms_abi)) *EFI_GET_VARIABLE) (
+typedef int64_t (_ms_abi *EFI_GET_VARIABLE) (
 	uint16_t *VariableName,
 	EFI_GUID *VendorGuid,
 	uint32_t *Attributes,
@@ -139,14 +140,14 @@ typedef int64_t (__attribute__((ms_abi)) *EFI_GET_VARIABLE) (
 	void *Data
 );
 
-typedef int64_t (__attribute__((ms_abi)) *EFI_GET_NEXT_VARIABLE_NAME) (
+typedef int64_t (_ms_abi *EFI_GET_NEXT_VARIABLE_NAME) (
 	uint64_t *VariableNameSize,
 	uint16_t *VariableName,
 	EFI_GUID *VendorGuid
 );
 
 
-typedef int64_t (__attribute__((ms_abi)) *EFI_SET_VARIABLE) (
+typedef int64_t (_ms_abi *EFI_SET_VARIABLE) (
 	uint16_t *VariableName,
 	EFI_GUID *VendorGuid,
 	uint32_t Attributes,
@@ -160,23 +161,22 @@ typedef struct {
 	uint8_t SetsToZero; // Set clears sub-second time
 } EFI_TIME_CAPABILITIES;
 
-
-typedef int64_t (__attribute__((ms_abi)) *EFI_GET_TIME) (
+typedef int64_t (_ms_abi *EFI_GET_TIME) (
 	EFI_TIME *Time,
 	EFI_TIME_CAPABILITIES *Capabilities
 );
 
-typedef int64_t (__attribute__((ms_abi)) *EFI_SET_TIME) (
+typedef int64_t (_ms_abi *EFI_SET_TIME) (
 	EFI_TIME *Time
 );
 
-typedef int64_t (__attribute__((ms_abi)) *EFI_GET_WAKEUP_TIME) (
+typedef int64_t (_ms_abi *EFI_GET_WAKEUP_TIME) (
 	uint8_t *Enabled,
 	uint8_t *Pending,
 	EFI_TIME *Time
 );
 
-typedef int64_t (__attribute__((ms_abi)) *EFI_SET_WAKEUP_TIME) (
+typedef int64_t (_ms_abi *EFI_SET_WAKEUP_TIME) (
 	uint8_t Enable,
 	EFI_TIME *Time
 );
@@ -187,18 +187,18 @@ typedef enum {
 	EfiResetShutdown
 } EFI_RESET_TYPE;
 
-typedef int64_t (__attribute__((ms_abi)) *EFI_RESET_SYSTEM) (
+typedef int64_t (_ms_abi *EFI_RESET_SYSTEM) (
 	EFI_RESET_TYPE ResetType,
 	int64_t ResetStatus,
 	uint64_t DataSize,
 	uint16_t *ResetData
 );
 
-typedef int64_t (__attribute__((ms_abi)) *EFI_GET_NEXT_MONOTONIC_COUNT) (
+typedef int64_t (_ms_abi *EFI_GET_NEXT_MONOTONIC_COUNT) (
 	uint64_t *Count
 );
 
-typedef int64_t (__attribute__((ms_abi)) *EFI_GET_NEXT_HIGH_MONO_COUNT) (
+typedef int64_t (_ms_abi *EFI_GET_NEXT_HIGH_MONO_COUNT) (
 	uint32_t *HighCount
 );
 
@@ -221,20 +221,20 @@ typedef struct {
 #define CAPSULE_FLAGS_POPULATE_SYSTEM_TABLE 0x00020000
 #define CAPSULE_FLAGS_INITIATE_RESET 0x00040000
 
-typedef int64_t (__attribute__((ms_abi)) *EFI_UPDATE_CAPSULE) (
+typedef int64_t (_ms_abi *EFI_UPDATE_CAPSULE) (
 	EFI_CAPSULE_HEADER **CapsuleHeaderArray,
 	uint64_t CapsuleCount,
 	uint64_t ScatterGatherList
 );
 
-typedef int64_t (__attribute__((ms_abi)) *EFI_QUERY_CAPSULE_CAPABILITIES) (
+typedef int64_t (_ms_abi *EFI_QUERY_CAPSULE_CAPABILITIES) (
 	EFI_CAPSULE_HEADER **CapsuleHeaderArray,
 	uint64_t CapsuleCount,
 	uint64_t *MaximumCapsuleSize,
 	EFI_RESET_TYPE *ResetType
 );
 
-typedef int64_t (__attribute__((ms_abi)) *EFI_QUERY_VARIABLE_INFO) (
+typedef int64_t (_ms_abi *EFI_QUERY_VARIABLE_INFO) (
 	uint32_t Attributes,
 	uint64_t *MaximumVariableStorageSize,
 	uint64_t *RemainingVariableStorageSize,

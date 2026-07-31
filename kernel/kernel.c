@@ -1,8 +1,7 @@
 #include "lib/console.h"
-#include "lib/memory.h"
-#include "rtsvcs.h"
-#include "boot.h"
 #include "lib/font.h"
+#include "physmem.h"
+#include "boot.h"
 #include "video.h"
 #include "register.h"
 #include "tls.h"
@@ -52,7 +51,7 @@ static const char* memtypeconvert(EFI_MEMORY_TYPE memtype){
 }
 */
 
-uint64_t _thread test_thread_data = 0x0102030405060708ull;
+uint64_t __tls test_thread_data = 0x0102030405060708ull;
 
 void kmain(){
 	init_video(boot_info->vram, boot_info->width, boot_info->height, boot_info->ppl, boot_info->format);
