@@ -1,7 +1,11 @@
 # THE CHANGELOG (and prospect)
     of the JUSTOS
 
-## [v0.0.6] / 2026-07-31
+## [v0.0.7] / NET: 2026-08
+- Fast heap for small data
+- Improved project structure
+
+## [v0.0.6]() / 2026-07-31
 - Beautiful CHANGELOG
 - TLS correct support
 - Using standard header files for integer types

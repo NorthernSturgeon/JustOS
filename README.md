@@ -4,10 +4,12 @@ My operating system for x86-64
 ## About
 An OS from an amateur developer with very serious intentions
 
-## Project timeline (outdated)
-+ \[🌱 Origin] 09.02.2022 — Birth of concept  
-+ \[🚀 Launch] 12.07.2025 — First release: bootloader works!  
+## Project timeline
++ [🌱 Origin] 09.02.2022 — Birth of concept
++ [🚀 Launch] 12.07.2025 — First release: bootloader works!
 + ...
+
+    See features in the [changelog](CHANGELOG.md)
 
 ## Deployment on virtual drive
 1. Create .vhd file that contains EFI partition (MUST be 1st partition) with size at least 128 MiB
