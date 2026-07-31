@@ -2,6 +2,9 @@
 .globl rwlock_inc
 .globl rwlock_lock
 
+.type rwlock_inc, STT_FUNC
+.type rwlock_lock, STT_FUNC
+
 .text
 	spin_lockb:
 		endbr64

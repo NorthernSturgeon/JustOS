@@ -1,4 +1,4 @@
-#include "lib/memory.h"
+#include "physmem.h"
 
 static size_t to_pages(size_t bytes){
 	return (bytes>>12) + (bytes&0xfff ? 1 : 0);

@@ -1,10 +1,10 @@
 include ../local.env
 
-LIBC_SOURCES := lib/mem.S lib/atomic.S lib/physmem.c lib/memory.c \
+LIBC_SOURCES := lib/mem.S lib/atomic.S lib/memory.c \
 				lib/console.c lib/font.c
 #				lib/crc32.c lib/string.c
 
-KERNEL_SOURCES := header.S kernel.c video.c
+KERNEL_SOURCES := header.S kernel.c video.c physmem.c
 
 CFLAGS := -c -I include -nostdlib -ffreestanding -fPIC \
 	-fomit-frame-pointer -fno-stack-protector \
@@ -13,7 +13,7 @@ CFLAGS := -c -I include -nostdlib -ffreestanding -fPIC \
 	-march=x86-64 -std=c17 -fno-tree-vrp -mstackrealign \
 	-O2 -mcmodel=medium -mno-red-zone -fno-semantic-interposition
 
-KERNEL_CFLAGS := $(CFLAGS)
+KERNEL_CFLAGS := $(CFLAGS) -fvisibility=hidden
 
 LIBC_CFLAGS := $(CFLAGS)
 

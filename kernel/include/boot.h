@@ -1,6 +1,7 @@
 #ifndef __BOOTINFO_H__
 #define __BOOTINFO_H__
 
+#include "physmem.h"
 #include "rtsvcs.h"
 
 typedef struct __packed{

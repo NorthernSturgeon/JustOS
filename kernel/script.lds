@@ -4,13 +4,13 @@ ENTRY(kentry)
 SECTIONS{
 	. = 0x1000;
 	.text ALIGN(4096):{
-		_DTV_ = .;
+		PROVIDE_HIDDEN(_DTV_ = .);
 		*(.text)
 	}
 	.data ALIGN(4096):{ *(.data) *(.bss)}
 
 	.percpu : {
-		_percpu_start_ = .;
+		PROVIDE_HIDDEN(_percpu_start_ = .);
 		*(.percpu)
 	}
 

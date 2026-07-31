@@ -1,16 +1,16 @@
-#include "lib/memory.h"
 #include "lib/string.h"
 #include "lib/atomic.h"
 #include "lib/console.h"
 #include <alloca.h>
+#include "physmem.h"
 #include "boot.h"
 
 #define MARKER __UINT64_MAX__
 
-gorl_t gorl;
+__export gorl_t gorl;
 
-e820_entry_t *e820;
-size_t e820_len;
+__export e820_entry_t *e820;
+__export size_t e820_len;
 
 static uint64_t round_to(uint64_t n, uint64_t k){
 	return n + (n%k ? k - (n%k) : 0);
@@ -188,7 +188,7 @@ static inline uint64_t get_min(heapq_t *heap, size_t *size){
 }
 
 //size in pages
-void* allocate_pages(size_t size){
+__export void* allocate_pages(size_t size){
 	size <<= 12;
 	uint64_t result;
 
@@ -223,7 +223,7 @@ exit:
 }
 
 //size in pages
-void free_pages(void* ptr, size_t size){
+__export void free_pages(void* ptr, size_t size){
 	size <<= 12;
 
 	rwlock_inc(&gorl.rwlock);

@@ -16,6 +16,6 @@ static inline void* tls_ref(size_t off){
 
 #define tls_ptr(var) (__typeof__(var)*)tls_ref((size_t)&var)
 
-#define _thread __attribute__((section(".percpu")))
+#define __tls __attribute__((section(".percpu")))
 
 #endif
