@@ -34,21 +34,26 @@ struct console_info get_console_info(void){
 	return cs;
 }
 
-//deprecated
-void _puts(const char *str, char c){
+size_t strlen(const char *str){
+	size_t i = 0;
+	while (str[i]) i++;
+	return i;
+}
+
+void stdout(const char *str, size_t len){
 	struct screen_resolution sr = get_res();
 	uint16_t w = sr.width;
 	uint16_t h = sr.height;
 
-	for (; *str != c; str++){
-		if (*str == '\r') {x = basex; continue;}
-		if (*str == '\n') {x = basex; y += font_full_height;continue;}
+	for (size_t i = 0; i < len && str[i]; i++){
+		if (str[i] == '\r') {x = basex; continue;}
+		if (str[i] == '\n') {x = basex; y += font_full_height;continue;}
 		if (x >= w-font_width) {x = basex; y += font_full_height;}
 		if (y >= h-font_full_height) {y = basey; basex += column_width*font_full_width; x = basex;}
 		if (basex >= w-font_full_width*column_width) {basex = 0; scrool_flag = true; x = basex;}
 
 		fill_rect(backcolor,x,y,font_full_width,font_full_height);
-		draw_by_font_bitmap(get_symbol_by_id(*str), forecolor, x, y);
+		draw_by_font_bitmap(get_symbol_by_id(str[i]), forecolor, x, y);
 		if (scrool_flag){
 			fill_rect(forecolor, basex, y+font_height, column_width*font_full_width, 1);
 			if (y >= font_full_height) fill_rect(backcolor, basex, y+font_height-font_full_height, column_width*font_full_width, 1);
@@ -57,9 +62,6 @@ void _puts(const char *str, char c){
 	}
 }
 
-#define puts(s) _puts(s, 0)
-
-//to be refactored
 void printf(const char *str, ...){
 	uint64_t u_buffer;
 	unsigned char p_buffer[8] = {0};
@@ -68,9 +70,10 @@ void printf(const char *str, ...){
 	const char *str0 = str;
 	for (;*str;str++){
 		if (*str == '%') {
-			_puts(str0, '%');
+			stdout(str0, str - str0);
 			str0 = str + 2;
 			char out_buffer[21] = {0};
+			size_t flen = 1;
 			switch (*++str){
 			case '%':
 				out_buffer[0] = '%';
@@ -85,9 +88,11 @@ void printf(const char *str, ...){
 					out_buffer[14-2*i] = (p_buffer[i]>>4)+0x30;
 					if (out_buffer[14-2*i] >= 0x3A) out_buffer[14-2*i] += 7;
 				}
+				flen = 16;
 				break;
 			case 's':
-				puts(va_arg(data, char*));
+				char* s = va_arg(data, char*);
+				stdout(s, strlen(s));
 				continue;
 			case 'd':
 				int64_t d_buffer = va_arg(data, int64_t);
@@ -95,6 +100,8 @@ void printf(const char *str, ...){
 				if (d_buffer < 0){
 					out_buffer[i++] = '-';
 					u_buffer = -d_buffer;
+				} else {
+					u_buffer = d_buffer;
 				}
 				goto i2a;
 			case 'u':
@@ -115,11 +122,14 @@ void printf(const char *str, ...){
 					*start=*out;
 					*out=temp;
 				}
+				flen = i;
 				break;
+			default:
+				flen = 0;
 			}
-			puts(out_buffer);
+			stdout(out_buffer, flen);
 		}
 	}
-	puts(str0);
+	stdout(str0, str - str0);
 	va_end(data);
 }

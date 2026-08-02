@@ -299,7 +299,7 @@ void init_mm(){
 	size_t st_size = to_pages((size_t)virt_to_phys(gorl.list[gorl.lenght-1]) >> 9);
 	gorl.table = allocate_pages(st_size);
 
-	printf("size table: %p, %u pages, %u kB\n", gorl.table, st_size, st_size << 2);
+	printf("init_mm: size table %p, %u pages, %u kB\n", gorl.table, st_size, st_size << 2);
 
 	//NULLPTR!
 	if (!gorl.table){

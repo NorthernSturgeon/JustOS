@@ -4,7 +4,7 @@ LIBC_SOURCES := lib/mem.S lib/atomic.S lib/memory.c \
 				lib/console.c lib/font.c
 #				lib/crc32.c lib/string.c
 
-KERNEL_SOURCES := header.S kernel.c video.c physmem.c
+KERNEL_SOURCES := header.S kernel.c isr.S video.c physmem.c isr_id.S
 
 CFLAGS := -c -I include -nostdlib -ffreestanding -fPIC \
 	-fomit-frame-pointer -fno-stack-protector \

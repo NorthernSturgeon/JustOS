@@ -4,6 +4,7 @@
 ## [v0.0.7] / NET: 2026-08
 - Fast heap for small data
 - Improved project structure
+- Basic interrupt handling
 
 ## [v0.0.6]() / 2026-07-31
 - Beautiful CHANGELOG
