@@ -4,6 +4,9 @@
 #include <alloca.h>
 #include "physmem.h"
 #include "boot.h"
+#include "interrupts.h"
+
+extern void init_libcalloc(void* max_address);
 
 #define MARKER __UINT64_MAX__
 
@@ -16,9 +19,27 @@ static uint64_t round_to(uint64_t n, uint64_t k){
 	return n + (n%k ? k - (n%k) : 0);
 }
 
-static size_t to_pages(size_t bytes){
-	return (bytes>>12) + (bytes&0xfff ? 1 : 0);
-}
+// static size_t to_pages(size_t bytes){
+// 	return (bytes>>12) + (bytes&0xfff ? 1 : 0);
+// }
+
+// void bsearch(uint64_t start, uint64_t end, int64_t *si, int64_t *ei){
+// 	int64_t ls = -1, rs = (int64_t)gorl.lenght;
+// 	int64_t le = ls, re = rs;
+// 	while (rs - ls > 1){
+// 		int64_t m = (rs + ls) / 2;
+// 		if (gorl.list[m] < start) ls = m; 
+// 		else rs = m;
+// 	}
+// 	*si = rs;
+// 	le = ls;
+// 	while (re - le > 1){
+// 		int64_t m = (re + le) / 2;
+// 		if (gorl.list[m] <= end) le = m;
+// 		else re = m;
+// 	}
+// 	*ei = re;
+// }
 
 // call under lock!
 void optimize_gorl(){
@@ -32,13 +53,36 @@ void optimize_gorl(){
 	gorl.lenght = j;
 }
 
+uint64_t lowerbound(uint64_t start){
+	int64_t l = -1, r = (int64_t)gorl.lenght;
+
+	while (r - l > 1){
+		int64_t m = (r + l) / 2;
+		if (gorl.list[m] < start) l = m;
+		else r = m;
+	}
+
+	return (uint64_t)r;
+}
+
+uint64_t upperbound(uint64_t end, int64_t l0){
+	int64_t l = l0, r = (int64_t)gorl.lenght;
+
+	while (r - l > 1){
+		int64_t m = (r + l) / 2;
+		if (gorl.list[m] <= end) l = m;
+		else r = m;
+	}
+
+	return (uint64_t)r;
+}
+
 //size in bytes
 void mark_free(void* ptr, size_t size){
 	uint64_t start = (uint64_t)ptr;
 	uint64_t end = start+size;
-	size_t place = 0, j = 0;
 
-	rwlock_lock(&gorl.rwlock);
+	uint8_t irq_state = rwlock_lock_crit(&gorl.rwlock);
 	// remove zero-lenght
 	optimize_gorl();
 
@@ -47,57 +91,44 @@ void mark_free(void* ptr, size_t size){
 		gorl.list[gorl.lenght++] = end;
 	} else {
 		//insert based on start and fix left border
-		for (size_t i = 0; i < gorl.lenght; i++){
-			if (gorl.list[i] >= start){
-				if (i&1){ // i odd [F(i-1)<start, Bi >= start]
-					memmove(&gorl.list[i+1], &gorl.list[i-1], (gorl.lenght-i+1)*sizeof(uint64_t));
-					// i odd [F(i-1) < start, Im F=start, Bi=end, F(i+1)>=start (possibly wba)]
-					i--;
-					// i even [Fi < start, Im F=start, B(i+1)=end, F(i+2)>=start (possibly wba)]
-				} else { // i even [B(i-1)<start, Fi >= start]
-					memmove(&gorl.list[i+2], &gorl.list[i], (gorl.lenght-i)*sizeof(uint64_t));
-					gorl.list[i] = start;
-					// i even [B(i-1)<start, Fi=start, B(i+1)=end, F(i+2)>=start (possibly wba)]
-				}
-				gorl.list[++i] = end;
-				gorl.lenght += 2;
-				place = i; // Bp=end (always odd)
-				break;
-			}
+		size_t si = lowerbound(start); //start index
+
+		if (si&1){ // si odd [F(si-1)<start, Bsi >= start]
+			memmove(&gorl.list[si+1], &gorl.list[si-1], (gorl.lenght-si+1)*sizeof(uint64_t));
+			// si odd [F(si-1) < start, Im F=start, Bsi=end, F(si+1)>=start (possibly wba)]
+			si--;
+			// si even [Fsi < start, Im F=start, B(si+1)=end, F(si+2)>=start (possibly wba)]
+		} else { // si even [B(si-1)<start, Fsi >= start]
+			memmove(&gorl.list[si+2], &gorl.list[si], (gorl.lenght-si)*sizeof(uint64_t));
+			gorl.list[si] = start;
+			// si even [B(si-1)<start, Fsi=start, B(si+1)=end, F(si+2)>=start (possibly wba)]
+		}
+		gorl.list[++si] = end; // Bsi=end (always odd)
+		gorl.lenght += 2;
+
+		// absorb and fix
+		size_t ei = upperbound(end, si); //end index
+		// ei odd [F(si-1), Bsi=end (will be erased), ..., F(ei-1)<=end, Bei>end] => ok!
+		if (!(ei&1)){ // ei even [F(si-1), Bsi=end (will be erased), ..., Fei>end] -> save Bsi
+			si++; 
+			// [F(si-1), Bsi=end, si..., Fei>end]
 		}
 
-		// absorb and fix right border
-		for (size_t i = place + 1; i < gorl.lenght; i++){
-			if (gorl.list[i] > end){
-				// i even [F(p-1), Bp=end, ..., Fi>end] => ok!
-				if (i&1){ // i odd [F(p-1), Bp=end, ..., F(i-1)<=end (erased), Bi>end]
-					gorl.list[place] = MARKER;
-					// [F(p-1), Bp=end (erased), ..., F(i-1)<=end (erased), Bi>end]
-				}
-				break;
-			}
-			//gorl.list[i] <= end -> absorb
-			gorl.list[i] = MARKER;
-		}
-
-		// remove marked
-		for (size_t i = 0; i < gorl.lenght; i++) {
-			if (gorl.list[i] != MARKER)
-				gorl.list[j++] = gorl.list[i];
-		}
-		gorl.lenght = j;
+		// remove absorbed
+		memmove(&gorl.list[si], &gorl.list[ei], (gorl.lenght-ei)*sizeof(uint64_t));
+		gorl.lenght = si + (gorl.lenght-ei);
 	}
 
 	rwlock_unlock(&gorl.rwlock);
+	if (irq_state) enable_irq();
 };
 
 //size in bytes
 void mark_busy(void* ptr, size_t size){
 	uint64_t start = (uint64_t)ptr;
 	uint64_t end = start+size;
-	size_t place = 0, j = 0;
-
-	rwlock_lock(&gorl.rwlock);
+	size_t si = 0;
+	uint8_t irq_state = rwlock_lock_crit(&gorl.rwlock);
 	// remove zero-lenght
 	optimize_gorl();
 
@@ -110,54 +141,41 @@ void mark_busy(void* ptr, size_t size){
 		// marking all memory as busy is prohibited
 		} else if (!(start <= gorl.list[0] && end >= gorl.list[gorl.lenght-1])) {
 			//insert based on start and fix left border
-			for (size_t i = 1; i < gorl.lenght; i++){
-				if (gorl.list[i] >= start){
-					if (i&1){ // i odd [F(i-1)<start, Bi >= start]
-						memmove(&gorl.list[i+2], &gorl.list[i], (gorl.lenght-i)*sizeof(uint64_t));
-						gorl.list[i] = start;
-						// i odd [F(i-1)<start, Bi=start, F(i+1)=end, B(i+2)>=start (possibly wba)]
-					} else { // i even [B(i-1)<start, Fi >= start], unsafe if i=0
-						memmove(&gorl.list[i+1], &gorl.list[i-1], (gorl.lenght-i+1)*sizeof(uint64_t));
-						// i even [B(i-1) < start, Im B=start, Fi=end, B(i+1)>=start (possibly wba)]
-						i--;
-						// i odd [Bi < start, Im B=start, F(i+1)=end, B(i+2)>=start (possibly wba)]
-					}
-					gorl.list[++i] = end;
-					gorl.lenght += 2;
-					place = i; // Fp=end (always even), never last element
-					break;
-				}
+			si = lowerbound(start); //start index
+
+			if (si&1){ // si odd [F(si-1)<start, Bsi >= start]
+				memmove(&gorl.list[si+2], &gorl.list[si], (gorl.lenght-si)*sizeof(uint64_t));
+				gorl.list[si] = start;
+				// si odd [F(si-1)<start, Bsi=start, F(si+1)=end, B(si+2)>=start (possibly wba)]
+			} else { // si even [B(si-1)<start, Fsi >= start], unsafe if si=0
+				memmove(&gorl.list[si+1], &gorl.list[si-1], (gorl.lenght-si+1)*sizeof(uint64_t));
+				// si even [B(si-1) < start, Im B=start, Fsi=end, B(si+1)>=start (possibly wba)]
+				si--;
+				// si odd [Bsi < start, Im B=start, F(si+1)=end, B(si+2)>=start (possibly wba)]
 			}
+			gorl.list[++si] = end; // Fsi=end (always even), never last element
+			gorl.lenght += 2;
 
 			absorb:
-			// absorb and fix right border
-			for (size_t i = place + 1; i < gorl.lenght; i++){
-				if (gorl.list[i] > end){
-					// i odd [B(p-1), Fp=end, ..., Bi>end] => ok!
-					if (!(i&1)){ // i even [B(p-1), Fp=end, ..., B(i-1)<=end (erased), Fi>end]
-						gorl.list[place] = MARKER;
-						// [B(p-1), Fp=end (erased), ..., B(i-1)<=end (erased), Fi>end]
-					}
-					break;
-				}
-				//gorl.list[i] <= end -> absorb
-				gorl.list[i] = MARKER;
+			// absorb and fix
+			size_t ei = upperbound(end, si); //end index
+			// ei even [B(si-1), Fsi=end (will be erased), ..., B(ei-1)<=end, Fei>end]
+			if (ei&1){ // ei odd [B(si-1), Fsi=end (will be erased), ..., Bei>end] -> save Fsi
+				si++;
+				// [B(si-1), Fsi=end, si..., Bei>end]
 			}
 
-			// remove marked
-			for (size_t i = 0; i < gorl.lenght; i++) {
-				if (gorl.list[i] != MARKER)
-					gorl.list[j++] = gorl.list[i];
-			}
-			gorl.lenght = j;
+			// remove absorbed
+			memmove(&gorl.list[si], &gorl.list[ei], (gorl.lenght-ei)*sizeof(uint64_t));
+			gorl.lenght = si + (gorl.lenght-ei);
 
 			// special case: B(last) <= end -> remove Fp=end
-			// lenght must be even
 			gorl.lenght -= gorl.lenght&1;
 		}
 	}
 
 	rwlock_unlock(&gorl.rwlock);
+	if (irq_state) enable_irq();
 };
 
 typedef struct __packed{
@@ -281,7 +299,6 @@ void init_mm(){
 
 	size_t total = (size_t)&gorl.list[gorl.lenght] - (size_t)boot_info->ptzone;
 
-	//
 	mark_busy(phys_to_virt(NULL), 1u<<20); // first megabyte
 	mark_busy(boot_info->ptzone, round_to(total, 4096)); // page tables and after
 
@@ -296,16 +313,5 @@ void init_mm(){
 
 	mark_busy(boot_info->stack, boot_info->stack_size); // kernel stack
 
-	size_t st_size = to_pages((size_t)virt_to_phys(gorl.list[gorl.lenght-1]) >> 9);
-	gorl.table = allocate_pages(st_size);
-
-	printf("init_mm: size table %p, %u pages, %u kB\n", gorl.table, st_size, st_size << 2);
-
-	//NULLPTR!
-	if (!gorl.table){
-		printf("FATAL: not enough memory for size table\n");
-		for(;;);
-	}
-
-	gorl.table[(uint64_t)virt_to_phys(gorl.table)>>12] = st_size;
+	init_libcalloc(virt_to_phys(gorl.list[gorl.lenght-1]));
 }

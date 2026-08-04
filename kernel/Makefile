@@ -4,7 +4,8 @@ LIBC_SOURCES := lib/mem.S lib/atomic.S lib/memory.c \
 				lib/console.c lib/font.c
 #				lib/crc32.c lib/string.c
 
-KERNEL_SOURCES := header.S kernel.c isr.S video.c physmem.c isr_id.S
+KERNEL_SOURCES := header.S kernel.c isr.S video.c \
+				physmem.c isr_id.S interrupts.c
 
 CFLAGS := -c -I include -nostdlib -ffreestanding -fPIC \
 	-fomit-frame-pointer -fno-stack-protector \
@@ -53,11 +54,13 @@ clear:
 	touch ./$(OUT_DIR)/.gitkeep
 
 lib: $(LIBC_OBJS)
-	ld $(LIBC_OBJS) $(LIBC_LDFLAGS) -o $(OUT_DIR)/libc.so
+	@echo $(LIBC_OBJS)
+	@ld $(LIBC_OBJS) $(LIBC_LDFLAGS) -o $(OUT_DIR)/libc.so
 	@echo libc.so compiled successfully!
 
 kernel: lib $(KERNEL_OBJS)
-	ld $(KERNEL_OBJS) $(KERNEL_LDFLAGS) -o $(OUT_DIR)/kernel.elf $(OUT_DIR)/libc.so
+	@echo $(KERNEL_OBJS)
+	@ld $(KERNEL_OBJS) $(KERNEL_LDFLAGS) -o $(OUT_DIR)/kernel.elf $(OUT_DIR)/libc.so
 	@echo kernel.elf compiled successfully!
 
 vhdinstall:

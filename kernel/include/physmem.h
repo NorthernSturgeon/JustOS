@@ -37,9 +37,8 @@ extern size_t e820_len;
 //global occupied region list
 typedef struct{
 	uint64_t *list; //atomic
-	uint64_t volatile lenght;
+	uint64_t lenght;
 	uint64_t rwlock;
-	uint64_t volatile *table;
 } gorl_t;
 
 extern gorl_t gorl;

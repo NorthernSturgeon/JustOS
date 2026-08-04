@@ -1,9 +1,13 @@
 .globl spin_lockb
 .globl rwlock_inc
 .globl rwlock_lock
+.globl rwlock_inc_crit
+.globl rwlock_lock_crit
 
 .type rwlock_inc, STT_FUNC
 .type rwlock_lock, STT_FUNC
+.type rwlock_inc_crit, STT_FUNC
+.type rwlock_lock_crit, STT_FUNC
 
 .text
 spin_lockb:
@@ -32,6 +36,7 @@ rwlock_inc:
 	inc %ecx
 	lock cmpxchgq %rcx, (%rdi)
 	jnz 1b
+	xor %al, %al
 	ret
 rwlock_inc_crit:
 	endbr64
@@ -51,6 +56,7 @@ rwlock_inc_crit:
 	cli
 	lock cmpxchgq %rcx, (%rdi)
 	jnz 1b
+	mov $1, %al
 	ret
 /*
 rwlock_dec:

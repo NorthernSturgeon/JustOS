@@ -5,6 +5,8 @@
 - Fast heap for small data
 - Improved project structure
 - Basic interrupt handling
+- Optimized operations with *gorl* @ *`physmem.c`*
+- Fixed incorrect implementation of ***memmove***
 
 ## [v0.0.6]() / 2026-07-31
 - Beautiful CHANGELOG
@@ -18,6 +20,7 @@
 - Now all loaded libraries will reserve memory
 
 ## [v0.0.5]() / 2026-07-29
+- Dynamic linking!
 - Fixed incorrect implementation of min-heap for page allocator
 - Optimizations and bugfixes...
 

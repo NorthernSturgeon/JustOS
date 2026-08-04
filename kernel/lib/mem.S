@@ -20,13 +20,12 @@ memmove:
 	movq %rdi, %rax
 	test %rdi, %rsi
 	je memret
-	add %rdx, %rsi
 	cmp %rsi, %rdi
-	jb memmove2
-	sub %rdx, %rsi
+	ja memmove2
 	cld
 	jmp memmain
 memmove2:
+	add %rdx, %rsi
 	add %rdx, %rdi
 	dec %rsi
 	dec %rdi
