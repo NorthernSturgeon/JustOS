@@ -14,6 +14,7 @@
 .text
 isr_common_stub:
 	# save caller-saved GPR
+	pushfq
 	push %rax
 	push %rdi
 	push %rsi
@@ -25,10 +26,10 @@ isr_common_stub:
 	push %r11
 
 	# extract int vector
-	movb 72(%rsp), %dil
+	movb 80(%rsp), %dil
 
 	# get pointer to stack at int
-	leaq 80(%rsp), %rsi
+	leaq 88(%rsp), %rsi
 
 	# we need register for stack operations
 	push %r12
@@ -72,10 +73,14 @@ isr_common_stub:
 	# if zero - there is no error code on stack
 	jz 1f
 	# pop it otherwise
-	add $8, %rsp
-1:
-	# pop int vector
-	add $8, %rsp
+	popfq
+	lea 16(%rsp), %rsp
+	iretq
 
-	# fin
+1:
+	popfq
+	# pop int vector
+	lea 8(%rsp), %rsp
+
+	# final
 	iretq

@@ -1,7 +1,9 @@
 #ifndef __PHYSMEM_H__
 #define __PHYSMEM_H__
 
-#include <stdatomic.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 //                        BADPOINTERBADPTR
 #define BAD_POINTER     0xBAD90187E2BAD972
@@ -46,5 +48,9 @@ extern gorl_t gorl;
 extern void init_mm();
 extern void* allocate_pages(size_t size);
 extern void free_pages(void* ptr, size_t size);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

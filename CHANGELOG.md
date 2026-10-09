@@ -1,12 +1,26 @@
 # THE CHANGELOG (and prospect)
     of the JUSTOS
+### Current stable version: [v0.0.6](#v006--2026-07-31)
 
-## [v0.0.7] / NET: 2026-08
-- Fast heap for small data
+## [Unversioned] / NET: N/A
+- Optimization of ***strlen***
+- Implementation of ***aligned_malloc***
+
+## [v0.0.7] / NET: N/A
+- License!
 - Improved project structure
-- Basic interrupt handling
-- Optimized operations with *gorl* @ *`physmem.c`*
-- Fixed incorrect implementation of ***memmove***
+- C++ support
+
+## [v0.0.7-alpha.2] / NET: N/A
+- GC and arena priority in fast heap
+
+## [v0.0.7-alpha.1] / NET: 2026-09
+- [ ] Prototype of fast heap for small data
+- [x] Basic interrupt handling
+- [x] Implemented ***strlen***
+- [x] Optimized operations with *gorl* @ *`physmem.c`*
+- [x] Refactored ***printf***
+- [x] Fixed incorrect implementation of ***memmove***
 
 ## [v0.0.6]() / 2026-07-31
 - Beautiful CHANGELOG
@@ -41,7 +55,7 @@
 - Bugfixes...
 
 ## [v0.0.2]() / 2025-07-17
-- Implemented `printf()`
+- Implemented ***printf***
 - Bugfixes...
 
 ## [v0.0.1]() / 2025-07-12

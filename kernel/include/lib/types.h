@@ -15,4 +15,6 @@
 #define __packed __attribute__((__packed__))
 #define __naked __attribute__((naked))
 
+#define PAGE_SIZE 4096
+
 #endif

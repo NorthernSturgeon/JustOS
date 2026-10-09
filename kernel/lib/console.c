@@ -2,7 +2,6 @@
 #include "lib/font.h"
 #include "video.h"
 #include "lib/console.h"
-#include "register.h"
 
 static uint8_t column_width = 60;
 
@@ -34,6 +33,7 @@ struct console_info get_console_info(void){
 	return cs;
 }
 
+// TODO: optimized version in assembly
 size_t strlen(const char *str){
 	size_t i = 0;
 	while (str[i]) i++;

@@ -3,7 +3,7 @@
  *	target - determine the interrupt vector
  *
  * Each possible interrupt vector has its own unique entry point that pushes the
- * vector number onto the stack and then transfers control to stage 2 (isr.S).Since we
+ * vector number onto the stack and then transfers control to stage 2 (isr.S). Since we
  * cannot use registers without first saving them, we are forced to push the number
  * onto the stack. A recursive macro with an incrementing parameter is used to
  * create the 256 distinct entry points. Note that the instruction is encoded

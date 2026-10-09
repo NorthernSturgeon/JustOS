@@ -1,23 +1,21 @@
+#include <alloca.h>
+#include <stdatomic.h>
+
 #include "lib/string.h"
 #include "lib/atomic.h"
 #include "lib/console.h"
-#include <alloca.h>
+#include "lib/memory.h"
+
 #include "physmem.h"
 #include "boot.h"
 #include "interrupts.h"
 
-extern void init_libcalloc(void* max_address);
-
-#define MARKER __UINT64_MAX__
+extern void init_malloc(void* max_address);
 
 __export gorl_t gorl;
 
 __export e820_entry_t *e820;
 __export size_t e820_len;
-
-static uint64_t round_to(uint64_t n, uint64_t k){
-	return n + (n%k ? k - (n%k) : 0);
-}
 
 // static size_t to_pages(size_t bytes){
 // 	return (bytes>>12) + (bytes&0xfff ? 1 : 0);
@@ -53,7 +51,7 @@ void optimize_gorl(){
 	gorl.lenght = j;
 }
 
-uint64_t lowerbound(uint64_t start){
+static uint64_t lowerbound(uint64_t start){
 	int64_t l = -1, r = (int64_t)gorl.lenght;
 
 	while (r - l > 1){
@@ -65,7 +63,7 @@ uint64_t lowerbound(uint64_t start){
 	return (uint64_t)r;
 }
 
-uint64_t upperbound(uint64_t end, int64_t l0){
+static uint64_t upperbound(uint64_t end, int64_t l0){
 	int64_t l = l0, r = (int64_t)gorl.lenght;
 
 	while (r - l > 1){
@@ -313,5 +311,5 @@ void init_mm(){
 
 	mark_busy(boot_info->stack, boot_info->stack_size); // kernel stack
 
-	init_libcalloc(virt_to_phys(gorl.list[gorl.lenght-1]));
+	init_malloc(virt_to_phys(gorl.list[gorl.lenght-1]));
 }
