@@ -5,22 +5,26 @@
 ## [Unversioned] / NET: N/A
 - Optimization of ***strlen***
 - Implementation of ***aligned_malloc***
+- Implementaion of ***realloc***
+- С++ support
 
 ## [v0.0.7] / NET: N/A
 - License!
 - Improved project structure
-- C++ support
+- Fast heap verification
 
-## [v0.0.7-alpha.2] / NET: N/A
-- GC and arena priority in fast heap
+## [v0.0.7-alpha.2] / NET: 2026-10
+- [ ] Logo rendering
+- [ ] *loaded_files* typification
 
-## [v0.0.7-alpha.1] / NET: 2026-09
-- [ ] Prototype of fast heap for small data
-- [x] Basic interrupt handling
-- [x] Implemented ***strlen***
-- [x] Optimized operations with *gorl* @ *`physmem.c`*
-- [x] Refactored ***printf***
-- [x] Fixed incorrect implementation of ***memmove***
+## [v0.0.7-alpha.1] / 2026-10-23
+- Prototype of fast heap for small data
+- Basic interrupt handling
+- Implemented ***strlen***
+- Optimized operations with *gorl* @ *`physmem.c`*
+- Refactored ***printf***
+- Fixed incorrect implementation of ***memmove***
+- Using *<stdbool.h>* instead of defining `bool` manually
 
 ## [v0.0.6]() / 2026-07-31
 - Beautiful CHANGELOG
@@ -52,6 +56,7 @@
 - Developed memory manager
 - Introduced bootloader configuration file in TSV format
 - Separated kernel and it's stack
+- Enforced C17 standard
 - Bugfixes...
 
 ## [v0.0.2]() / 2025-07-17

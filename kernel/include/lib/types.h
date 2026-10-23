@@ -3,9 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
-
-#define true 1
-#define false 0
+#include <stdbool.h>
 
 #define asm __asm__
 
@@ -16,5 +14,7 @@
 #define __naked __attribute__((naked))
 
 #define PAGE_SIZE 4096
+
+#define OPT_BARRIER() asm volatile ("" ::: "memory")
 
 #endif

@@ -6,7 +6,7 @@
  * vector number onto the stack and then transfers control to stage 2 (isr.S). Since we
  * cannot use registers without first saving them, we are forced to push the number
  * onto the stack. A recursive macro with an incrementing parameter is used to
- * create the 256 distinct entry points. Note that the instruction is encoded
+ * create the 256 distinct entry points. Note that the push instruction is encoded
  * directly via its opcode; otherwise, GAS generates different instructions for
  * vectors numbered 0–127 versus 128–255, which breaks the uniformity of instruction
  * length and operand size on the stack.

@@ -14,11 +14,7 @@ uint64_t __tls test_thread_data = 0x0102030405060708ull;
 void kmain(){
 	init_video(boot_info->vram, boot_info->width, boot_info->height, boot_info->ppl, boot_info->format);
 	fill_rect(0, 0, 0, boot_info->width-1, boot_info->height-1);
-	/*
-	idtr.limit = 4095;
-	idtr.base = (void*)boot_info - 4096;
-	asm volatile ("lidt %0" : : "m"(idtr));
-	*/
+
 	set_color(COLOR_WHITE, COLOR_BLACK);
 
 	//cr0_t cr0;
@@ -79,13 +75,6 @@ void kmain(){
 		printf("\n");
 	}
 	set_color(COLOR_WHITE, COLOR_BLACK);
-	//for (size_t i = 0; i < 200; i++) printf("Line speedtest: %u\n", i);
-
-	uint64_t gsbase;
-	rdmsr(IA32_GS_BASE, gsbase);
-	printf("GS BASE: %p\n", gsbase);
-	printf("TLS TEST: %p\n", *tls_ptr(test_thread_data));
-	//printf("TLS TEST: %p\n", test_global_data);
 
 	idtr.base = allocate_pages(1);
 	idtr.limit = 4095;
@@ -100,6 +89,14 @@ void kmain(){
 	printf("Interrupts! \n");
 
 	asm volatile ("int $255 \n\t" ::: "memory");
+
+	uint64_t gsbase;
+	rdmsr(IA32_GS_BASE, gsbase);
+	printf("GS_BASE: %p\n", gsbase);
+
+	printf("DTV BASE: %p\n", _DTV_);
+
+	printf("TLS TEST: %p\n", *tls_ptr(test_thread_data));
 
 	//for(;;);
 	asm_hlt();

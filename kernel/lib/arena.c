@@ -3,7 +3,6 @@
 #include "lib/string.h"
 #include "tls.h"
 #include "physmem.h"
-#include "interrupts.h"
 #include <stdatomic.h>
 
 //from lib/memory.c
@@ -11,6 +10,8 @@ extern uint64_t *size_table;
 #define ST_IDX(addr) ((uint64_t)virt_to_phys(addr)>>12)
 
 __tls AllocatorArena *cpu_top_arena = NULL;
+__tls size_t *cpu_pending = NULL;
+__tls size_t cpu_arenas_cnt = 0;
 
 /*
 	TODO: optimal data structure for exclusive access
@@ -61,7 +62,8 @@ static size_t arena_recalc(AllocatorArena *arena){
 		}
 	}
 
-	arena->max_available_block_size = max;
+	arena->max_free_size = max;
+	arena->flags = 0;
 	return (size_t)max;
 }
 
@@ -101,9 +103,12 @@ static void mark_free(AllocatorArena *arena, alist_t start, alist_t end){
 		memmove(&arena->list[si], &arena->list[ei], (arena->lenght-ei)*sizeof(alist_t));
 		arena->lenght = si + (arena->lenght-ei);
 	}
+
+	arena->flags = 1;
 };
 
-void mark_busy(AllocatorArena *arena, alist_t start, alist_t end){
+/*
+static void mark_busy(AllocatorArena *arena, alist_t start, alist_t end){
 	size_t si = 0;
 	// remove zero-lenght
 	optimize_arena(arena);
@@ -149,55 +154,176 @@ void mark_busy(AllocatorArena *arena, alist_t start, alist_t end){
 			arena->lenght -= arena->lenght&1;
 		}
 	}
-}
 
+	arena_recalc(arena);
+}
+*/
 static AllocatorArena* create_arena(){
 	AllocatorArena *new_arena = allocate_pages(ARENA_SIZE/PAGE_SIZE);
 	if (!new_arena) return NULL;
 
-	new_arena->pending = NULL;
+	new_arena->pending = tls_ptr(cpu_pending);
 	new_arena->lenght = 2;
-	new_arena->list[0] = RESERVED_SIZE/ARENA_RESOLUTION;
-
-	/*
-	if (ARENA_SIZE/ARENA_RESOLUTION > ALIST_MAX) new_arena->list[1] = ALIST_MAX;
-	else new_arena->list[1] = (ARENA_SIZE/ARENA_RESOLUTION);
-	*/
-	new_arena->list[1] = ALIST_MAX;
-	new_arena->max_available_block_size = new_arena->list[1] - new_arena->list[0];
+	new_arena->list[0] = NEW_ARENA_SOL;
+	new_arena->list[1] = NEW_ARENA_EOL;
+	new_arena->max_free_size = NEW_ARENA_FREESIZE;
+	new_arena->flags = 0;
 
 	for (size_t i = 0; i < ARENA_SIZE; i += PAGE_SIZE){
 		size_table[ST_IDX(((void*)new_arena) + i)] = (uint64_t)new_arena;
 	}
 
+	OPT_BARRIER();
+
 	AllocatorArena **top_arena = tls_ptr(cpu_top_arena);
 	new_arena->next = *top_arena;
 	*top_arena = new_arena;
 
+	*tls_ptr(cpu_arenas_cnt) += 1;
+
 	return new_arena;
 }
 
-/*
-	Restrictions:
-	- disabled interrupts,
-	- only current thread arenas
-*/
-static size_t arena_gc(AllocatorArena *arena){
-	size_t *val = atomic_load_explicit(&arena->pending, __ATOMIC_ACQUIRE), *prev = (size_t*)&arena->pending;
+static void destroy_arena(AllocatorArena* arena, AllocatorArena* prev){
+	if (arena->max_free_size < NEW_ARENA_FREESIZE) {
+		// printf("[WARN] Prevention an attempt to destroy non-empty arena\n");
+		return;
+	}
+
+	if (prev) prev->next = arena->next;
+	else *tls_ptr(cpu_top_arena) = arena->next;
+
+	OPT_BARRIER();
+
+	for (size_t i = 0; i < ARENA_SIZE; i += PAGE_SIZE){
+		size_table[ST_IDX(((void*)arena) + i)] = 0;
+	}
+
+	free_pages(arena, ARENA_SIZE/PAGE_SIZE);
+}
+
+static AllocatorArena** merge(AllocatorArena* left, AllocatorArena* right, AllocatorArena** target){
+	while (left && right){
+		if (left->max_free_size >= right->max_free_size){
+			*target = left;
+			left = left->next;
+		} else {
+			*target = right;
+			right = right->next;
+		}
+
+		target = &((*target)->next);
+	}
 	
-	if (val){ 
+	*target = left ? left : right;
+
+    while (*target) {
+        target = &((*target)->next);
+    }
+
+	return target;
+}
+
+static AllocatorArena* split(AllocatorArena* start, size_t n){
+	if (!start) return NULL;
+
+	for (size_t i = 1; i < n && start->next; i++){
+		start = start->next;
+	}
+
+	AllocatorArena* target = start->next;
+	start->next = NULL;
+	return target;
+}
+
+// iterative merge sort (reversed)
+static void sort_and_update(){
+	size_t lenght = *tls_ptr(cpu_arenas_cnt);
+	if (lenght < 2) return;
+
+	AllocatorArena *head, **tail;
+
+	for (size_t step = 1; step < lenght; step *= 2){
+		tail = tls_ptr(cpu_top_arena);
+		head = *tail;
+
+		while (head){
+			AllocatorArena *left = head;
+			AllocatorArena *right = split(left, step);
+
+			head = split(right, step);
+
+			tail = merge(left, right, tail);
+		}
+		
+	}
+}
+
+static void sift_down(AllocatorArena *arena, AllocatorArena *prev){
+	// so prev->next is arena
+	for (
+		AllocatorArena *target = arena->next;
+		target && target->max_free_size > arena->max_free_size; 
+		target = arena->next
+	) {
+		arena->next = target->next;
+
+		target->next = arena;
+
+		if (prev) prev->next = target;
+		else *tls_ptr(cpu_top_arena) = target;
+
+		prev = target;
+	}
+}
+
+static bool recalc_and_check(){
+	bool seen_empty = false, unsorted = false;
+
+	AllocatorArena *current = *tls_ptr(cpu_top_arena), *prev = NULL;
+
+	while (current){
+		if (current->flags) arena_recalc(current);
+
+		if (current->max_free_size == NEW_ARENA_FREESIZE){
+			if (seen_empty) {
+				// seen_empty is true => prev is not NULL
+				destroy_arena(current, prev);
+				current = prev->next;
+				continue;
+			}
+			else seen_empty = true;
+		}
+
+		if (prev && prev->max_free_size < current->max_free_size){
+			unsorted = true;
+		}
+
+		prev = current;
+		current = current->next;
+	}
+
+	return unsorted;
+}
+
+static void aalloc_gc(){
+	size_t *val = NULL, *prev = (size_t*)tls_ptr(cpu_pending);
+	val = (size_t*)atomic_exchange_explicit(prev, (size_t)val, __ATOMIC_ACQUIRE);
+	AllocatorArena *arena;
+	
+	if (val){
+		// process pending
 		while (val) {
-			atomic_store(prev, 0);
+			arena = (AllocatorArena*)size_table[ST_IDX(val)];
 			alist_t start = ((uint8_t*)val - (uint8_t*)arena)/ARENA_RESOLUTION;
-			size_t *next = (size_t*)atomic_load(val);
-			mark_free(arena, start, start + *(val+1));
-			prev = val;
+			size_t *next = (size_t*)*val;
+			mark_free(arena, start, start + *(val+1)); //little-endian only!
 			val = next;
 		}
 
-		return arena_recalc(arena);
+		// sort arenas
+		if (recalc_and_check()) sort_and_update();
 	}
-	return 0;
 }
 
 void* arena_allocate(size_t size){
@@ -206,25 +332,27 @@ void* arena_allocate(size_t size){
 
 	size /= ARENA_RESOLUTION;
 
-	disable_irq();
+	preempt_disable();
 retry:
-	AllocatorArena *current = *tls_ptr(cpu_top_arena);
+	AllocatorArena *current = *tls_ptr(cpu_top_arena), *prev = NULL;
 
-	if (!current || current->max_available_block_size < size) {
+	if (!current || current->max_free_size < size) {
 		if (current) {
-			if (arena_gc(current) >= size) goto found;
+			aalloc_gc();
+			current = *tls_ptr(cpu_top_arena);
+			if (current->max_free_size >= size) goto found;
 		}
 		current = create_arena();
 		if (!current) {
-			enable_irq();
+			preempt_enable();
 			return NULL;
 		}
 	} else {
 		AllocatorArena* next;
 		while ((next = current->next)){
-			if (next->max_available_block_size < size){
-				if (arena_gc(next) < size) goto found;
-			}
+			if (next->max_free_size < size) goto found;
+
+			prev = current;
 			current = next;
 		}
 	}
@@ -254,7 +382,9 @@ found:
 	}
 
 	if (best == SIZE_MAX){
-		current->max_available_block_size = max1;
+		// printf("[WARN] arena->max_free_size desynchronization\n");
+		current->max_free_size = max1;
+		sift_down(current, prev);
 		goto retry;
 	}
 
@@ -262,22 +392,23 @@ found:
 	size_t* ptr = (void*)current + current->list[best+1]*ARENA_RESOLUTION;
 
 	if (best == imax1) {
-		current->max_available_block_size = (bestsize - size < max2) ? max2 : bestsize - size;
+		current->max_free_size = (bestsize - size < max2) ? max2 : bestsize - size;
+
+		sift_down(current, prev);
 	}
 
-	enable_irq();
+	preempt_enable();
 
 	*ptr = 0;
 	*++ptr = size;
 	return ++ptr;
-	// node creation happens-before
 }
 
 void arena_free(AllocatorArena *arena, void* ptr){
-	ptr -= 16; // ptr is void*
-	size_t *val = atomic_load_explicit(&arena->pending, __ATOMIC_ACQUIRE);
+	ptr = (void*)(((uint64_t)ptr) - 16); // ptr is void*
+	size_t *val = atomic_load_explicit(arena->pending, __ATOMIC_RELAXED);
 
 	do{
 		*(size_t*)ptr = (size_t)val;
-	} while (atomic_compare_exchange_strong(&arena->pending, &val, ptr));
+	} while (atomic_compare_exchange_weak_explicit(arena->pending, &val, ptr, __ATOMIC_RELEASE, __ATOMIC_RELAXED));
 }
