@@ -1,6 +1,10 @@
 #ifndef __STRING_H__
 #define __STRING_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //#define SAFE_MEMCPY
 
 extern void* memset(void* dest, char c, size_t n);
@@ -17,5 +21,9 @@ extern void* memcpy(void* dest, void* src, size_t n);
 
 #define zeromem(dest, n) memset(dest, 0, n)
 //#define strcpy(dest, src) memccpy((void*)dest, (void*)src, 0)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

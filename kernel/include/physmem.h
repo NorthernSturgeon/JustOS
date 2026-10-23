@@ -1,7 +1,9 @@
 #ifndef __PHYSMEM_H__
 #define __PHYSMEM_H__
 
-#include <stdatomic.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 //                        BADPOINTERBADPTR
 #define BAD_POINTER     0xBAD90187E2BAD972
@@ -37,9 +39,8 @@ extern size_t e820_len;
 //global occupied region list
 typedef struct{
 	uint64_t *list; //atomic
-	uint64_t volatile lenght;
+	uint64_t lenght;
 	uint64_t rwlock;
-	uint64_t volatile *table;
 } gorl_t;
 
 extern gorl_t gorl;
@@ -47,5 +48,9 @@ extern gorl_t gorl;
 extern void init_mm();
 extern void* allocate_pages(size_t size);
 extern void free_pages(void* ptr, size_t size);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

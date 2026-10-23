@@ -1,9 +1,30 @@
 # THE CHANGELOG (and prospect)
     of the JUSTOS
+### Current stable version: [v0.0.6](#v006--2026-07-31)
 
-## [v0.0.7] / NET: 2026-08
-- Fast heap for small data
+## [Unversioned] / NET: N/A
+- Optimization of ***strlen***
+- Implementation of ***aligned_malloc***
+- Implementaion of ***realloc***
+- С++ support
+
+## [v0.0.7] / NET: N/A
+- License!
 - Improved project structure
+- Fast heap verification
+
+## [v0.0.7-alpha.2] / NET: 2026-10
+- [ ] Logo rendering
+- [ ] *loaded_files* typification
+
+## [v0.0.7-alpha.1] / 2026-10-23
+- Prototype of fast heap for small data
+- Basic interrupt handling
+- Implemented ***strlen***
+- Optimized operations with *gorl* @ *`physmem.c`*
+- Refactored ***printf***
+- Fixed incorrect implementation of ***memmove***
+- Using *<stdbool.h>* instead of defining `bool` manually
 
 ## [v0.0.6]() / 2026-07-31
 - Beautiful CHANGELOG
@@ -17,6 +38,7 @@
 - Now all loaded libraries will reserve memory
 
 ## [v0.0.5]() / 2026-07-29
+- Dynamic linking!
 - Fixed incorrect implementation of min-heap for page allocator
 - Optimizations and bugfixes...
 
@@ -34,10 +56,11 @@
 - Developed memory manager
 - Introduced bootloader configuration file in TSV format
 - Separated kernel and it's stack
+- Enforced C17 standard
 - Bugfixes...
 
 ## [v0.0.2]() / 2025-07-17
-- Implemented `printf()`
+- Implemented ***printf***
 - Bugfixes...
 
 ## [v0.0.1]() / 2025-07-12

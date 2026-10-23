@@ -1,5 +1,10 @@
 #ifndef __CONSOLE_H__
 #define __CONSOLE_H__
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
 //deprecated
 
@@ -49,5 +54,9 @@ struct console_info{
 extern struct console_info get_console_info(void);
 extern void set_color(uint32_t fc, uint32_t bc);
 extern void printf(const char *str, ...);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -5,62 +5,16 @@
 #include "video.h"
 #include "register.h"
 #include "tls.h"
+#include "interrupts.h"
 
 extern void asm_hlt(void);
-/*
-typedef struct {
-	uint16_t limit;
-	void    *base;
-} __packed idtr_t;
-
-idtr_t itdr;
-
-static const char* memtypeconvert(EFI_MEMORY_TYPE memtype){
-	switch (memtype){
-	case EfiReservedMemoryType:
-		return "reserved";
-	case EfiLoaderCode:
-		return "ldr-code";
-	case EfiLoaderData:
-		return "ldr-data";
-	case EfiBootServicesCode:
-		return "BS-code ";
-	case EfiBootServicesData:
-		return "BS-data ";
-	case EfiRuntimeServicesCode:
-		return "RT-code ";
-	case EfiRuntimeServicesData:
-		return "RT-data ";
-	case EfiConventionalMemory:
-		return "conv-mem";
-	case EfiUnusableMemory:
-		return "unusable";
-	case EfiACPIReclaimMemory:
-		return "ACPIrecl";
-	case EfiACPIMemoryNVS:
-		return "ACPI-NVS";
-	case EfiMemoryMappedIO:
-		return "MMIO    ";
-	case EfiMemoryMappedIOPortSpace:
-		return "MMIO-PS ";
-	case EfiPalCode:
-		return "palcode ";
-	default:
-		return "unknown ";
-	}
-}
-*/
 
 uint64_t __tls test_thread_data = 0x0102030405060708ull;
 
 void kmain(){
 	init_video(boot_info->vram, boot_info->width, boot_info->height, boot_info->ppl, boot_info->format);
 	fill_rect(0, 0, 0, boot_info->width-1, boot_info->height-1);
-	/*
-	itdr.limit = 4095;
-	itdr.base = (void*)boot_info - 4096;
-	asm volatile ("lidt %0" : : "m"(itdr));
-	*/
+
 	set_color(COLOR_WHITE, COLOR_BLACK);
 
 	//cr0_t cr0;
@@ -121,14 +75,28 @@ void kmain(){
 		printf("\n");
 	}
 	set_color(COLOR_WHITE, COLOR_BLACK);
-	//for (size_t i = 0; i < 200; i++) printf("Line speedtest: %u\n", i);
+
+	idtr.base = allocate_pages(1);
+	idtr.limit = 4095;
+	for (uint16_t i = 0; i < 256; i++){
+		fill_idt(&idtr.base[i], (uint64_t)isr_start + i*7, 0x8, 0, INT_TYPE_INTERRUPT);
+	}
+
+	asm volatile ("lidt %0 \n\t" :: "m"(idtr) : "memory");
+	printf("IDT loaded! \n");
+
+	enable_irq();
+	printf("Interrupts! \n");
+
+	asm volatile ("int $255 \n\t" ::: "memory");
 
 	uint64_t gsbase;
 	rdmsr(IA32_GS_BASE, gsbase);
-	printf("GS BASE: %p\n", gsbase);
+	printf("GS_BASE: %p\n", gsbase);
+
+	printf("DTV BASE: %p\n", _DTV_);
 
 	printf("TLS TEST: %p\n", *tls_ptr(test_thread_data));
-	//printf("TLS TEST: %p\n", test_global_data);
 
 	//for(;;);
 	asm_hlt();

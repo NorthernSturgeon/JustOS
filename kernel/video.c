@@ -42,19 +42,19 @@ void __export draw_pixel(uint32_t color, uint16_t x, uint16_t y){
 
 void __export fill_rect(uint32_t color, uint16_t x, uint16_t y, uint16_t w, uint16_t h){
 	color_correct(&color);
-    uint32_t *where = vram + (uint32_t)scanline * y + x;
-    for (uint16_t cy = 0; cy < h; cy++) {
-        for (uint16_t cx = 0; cx < w; cx++) {
-            where[cx] = color;
-        }
-        where += scanline;
-    }
+	uint32_t *where = vram + (uint32_t)scanline * y + x;
+	for (uint16_t cy = 0; cy < h; cy++) {
+		for (uint16_t cx = 0; cx < w; cx++) {
+			where[cx] = color;
+		}
+		where += scanline;
+	}
 }
 
 void __export draw_by_font_bitmap(uint8_t bitmap[] ,uint32_t color, uint16_t x, uint16_t y){
 	// cx - current x, cy - current y
 	color_correct(&color);
-    uint32_t *where = vram + (uint32_t)scanline * y + x;
+	uint32_t *where = vram + (uint32_t)scanline * y + x;
 	for (uint16_t cy = 0; cy < font_height; cy++){
 		for (uint16_t cx = 0; cx <= font_width; cx++){
 			if (bitmap[cy] & (1 << (7-cx))) where[cx] = color;

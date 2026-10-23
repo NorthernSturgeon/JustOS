@@ -148,10 +148,15 @@ static void resolve(hashtab_t *const ctx, libid_t *lib){
 			case R_X86_64_GLOB_DAT:
 				//Print(L"GLOB_DAT\n");
 				char *symname = &lib->dynstr[lib->dynsym[ELF64_R_SYM(lib->rela[i].r_info)].st_name];
+				if (!strcmpa(symname,"_DTV_") && ELF64_ST_BIND(lib->dynsym[ELF64_R_SYM(lib->rela[i].r_info)].st_info) == STB_WEAK) break;
 
 				symbol_t *target = ht_read(ctx, symname);
 				if (!target && ctx != &global_exports) target = ht_read(&global_exports, symname);
-				if (!target) Fatality(LDR_ELF, 24);
+				if (!target){
+					CHAR16* err_name = makechar16(symname);
+					Print(L"Unable to found symbol: %s\n", err_name);
+					Fatality(LDR_ELF, 24);
+				}
 				*(uint64_t*)got_entry = target->addr + lib->rela[i].r_addend;
 
 				break;
@@ -213,7 +218,7 @@ void dl_fini(loaded_file **files, size_t *files_cnt){
 			}
 		}
 	} else {
-		*files = NULL;
+		Fatality(LDR_MEM, 44);
 	}
 
 	ht_destroy(&loaded_libs);

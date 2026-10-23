@@ -1,10 +1,11 @@
 include ../local.env
 
 LIBC_SOURCES := lib/mem.S lib/atomic.S lib/memory.c \
-				lib/console.c lib/font.c
+				lib/console.c lib/font.c lib/arena.c
 #				lib/crc32.c lib/string.c
 
-KERNEL_SOURCES := header.S kernel.c video.c physmem.c
+KERNEL_SOURCES := header.S kernel.c isr.S video.c \
+				physmem.c isr_id.S interrupts.c
 
 CFLAGS := -c -I include -nostdlib -ffreestanding -fPIC \
 	-fomit-frame-pointer -fno-stack-protector \
@@ -15,7 +16,7 @@ CFLAGS := -c -I include -nostdlib -ffreestanding -fPIC \
 
 KERNEL_CFLAGS := $(CFLAGS) -fvisibility=hidden
 
-LIBC_CFLAGS := $(CFLAGS)
+LIBC_CFLAGS := $(CFLAGS) -Wno-address-of-packed-member
 
 KERNEL_LDFLAGS := -nostdlib -z relro -z now --warn-unresolved-symbols -h '\JUSTOS\kernel.elf' -I JUSTOS/bootx64.efi -pic --export-dynamic -T script.lds
 
@@ -53,11 +54,13 @@ clear:
 	touch ./$(OUT_DIR)/.gitkeep
 
 lib: $(LIBC_OBJS)
-	ld $(LIBC_OBJS) $(LIBC_LDFLAGS) -o $(OUT_DIR)/libc.so
+	@echo $(LIBC_OBJS)
+	@ld $(LIBC_OBJS) $(LIBC_LDFLAGS) -o $(OUT_DIR)/libc.so
 	@echo libc.so compiled successfully!
 
 kernel: lib $(KERNEL_OBJS)
-	ld $(KERNEL_OBJS) $(KERNEL_LDFLAGS) -o $(OUT_DIR)/kernel.elf $(OUT_DIR)/libc.so
+	@echo $(KERNEL_OBJS)
+	@ld $(KERNEL_OBJS) $(KERNEL_LDFLAGS) -o $(OUT_DIR)/kernel.elf $(OUT_DIR)/libc.so
 	@echo kernel.elf compiled successfully!
 
 vhdinstall:

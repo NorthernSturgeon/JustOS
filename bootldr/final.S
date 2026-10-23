@@ -34,6 +34,11 @@
 		add $4, %rdx
 		mov %rdx, %rsp
 
+		# set flags.nt to 0
+		pushfw
+		andw $0xBFFF, (%rsp)
+		popfw
+
 		# fill GDT
 #		subq $40, %rsp
 #		movq $0, (%rsp)
