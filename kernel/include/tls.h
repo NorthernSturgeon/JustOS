@@ -11,7 +11,7 @@ extern void* _percpu_start_;
 static inline void* tls_ref(size_t off){
 	register void* ptr;
 	asm (
-		"movq _DTV_@GOTPCREL(%%rip), %0 \n\t"
+		"leaq _DTV_@GOTPCREL(%%rip), %0 \n\t"
 		"movq (%0), %0 \n\t"
 		"movq %%gs:(%0), %0 \n\t"
 		:"=r"(ptr)::

@@ -62,6 +62,8 @@ typedef struct __attribute__((__packed__)){
 	UINT64 mmap_len;
 	loaded_file *files;
 	size_t files_cnt;
+	void* splash;
+	size_t splash_size;
 	VOID *vram;
 	UINT64 vram_size;
 	UINT16 width;
@@ -214,6 +216,8 @@ UINTN ReadFile(EFI_FILE_HANDLE fileDir, CHAR16 *filename, VOID** buffer, UINTN a
 	EFI_FILE_INFO* fileinfo = LibFileInfo(file);
 	const UINTN filesz = fileinfo->FileSize+addend;
 	FreePool(fileinfo);
+
+	Print(L"    size: %llu bytes\n", filesz);
 
 	UINTN pages = TO_PAGES(filesz);
 	ALLOC_KPAGES(buffer, pages);
@@ -393,6 +397,23 @@ CompareGuid(&conf_tb[i].VendorGuid,&acpi2_guid) == 0){
 	if (!boot_info->acpi_rdsp) Fatality(LDR_ACPI, 0);
 }
 
+static VOID load_splash(boot_info_t *boot_info, CHAR8* tsv, EFI_FILE_HANDLE root){
+	boot_info->splash = NULL;
+	boot_info->splash_size = 0;
+
+	CHAR8* logo_path = tsv_search(tsv, "splash", 1);
+	if (!logo_path) return;
+
+	CHAR16* tmp = makechar16(logo_path);
+	if (!tmp) Fatality(LDR_MEM, 998);
+	//Print(L"%s \n", tmp);
+
+	boot_info->splash_size = ReadFile(root, tmp, &boot_info->splash, 0);
+	boot_info->splash = CONV_PTR(boot_info->splash);
+
+	FreePool(tmp);
+}
+
 static VOID setup_video(boot_info_t *boot_info, INTN tw, INTN th){
 	Print(L"tw=%lld th=%lld\n", tw, th);
 
@@ -480,6 +501,8 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 
 	boot_info.stack_size = tsv_parseint(tsv_search(tsv, "stack", 1));
 	Print(L"D: stack size: %llu\n", boot_info.stack_size);
+
+	load_splash(&boot_info, tsv, root);
 
 	CHAR8* kernelpath = tsv_search(tsv, "kernel", 1);
 	if (!kernelpath) Fatality(LDR_CFG, 0);

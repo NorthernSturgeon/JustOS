@@ -4,7 +4,7 @@
 
 .text
 	__boot_info:
-		.rept 14
+		.rept 16
 		.quad 0
 		.endr
 	kentry:

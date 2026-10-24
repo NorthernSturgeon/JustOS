@@ -1,6 +1,6 @@
 #include "lib/console.h"
 #include "lib/font.h"
-#include "physmem.h"
+#include "lib/memory.h"
 #include "boot.h"
 #include "video.h"
 #include "register.h"
@@ -10,6 +10,49 @@
 extern void asm_hlt(void);
 
 uint64_t __tls test_thread_data = 0x0102030405060708ull;
+
+struct __packed BmpHeader{
+	uint16_t magic;
+	uint32_t bfsize;
+	uint32_t bfreserved;
+	uint32_t bfoffbits;
+	uint32_t bisize;
+	uint32_t biwidth;
+	uint32_t biheight;
+	uint16_t biplanes;
+	uint16_t bibitcount;
+	uint32_t bicompr;
+	uint32_t bisizeimage;
+	int32_t bixppm;
+	int32_t biyppm;
+	uint32_t biclrused;
+	uint32_t biclrimporntant;
+};
+
+void render_logo(struct BmpHeader *logo_hdr){
+	if (logo_hdr->bibitcount != 24 || boot_info->width < logo_hdr->biwidth ||
+		boot_info->height < logo_hdr->biheight || logo_hdr->bisize != 40 ||
+		logo_hdr->bicompr != 0
+	) return;
+
+	uint32_t xc = boot_info->width / 2 - logo_hdr->biwidth / 2;
+	uint32_t yc = boot_info->height / 2 - logo_hdr->biheight / 2;
+
+	uint32_t scanline = round_to((logo_hdr->bibitcount/8)*logo_hdr->biwidth, 4);
+	uint8_t *bitmap = (uint8_t*)logo_hdr + logo_hdr->bfoffbits;
+
+	for (uint32_t cy = 0; cy < logo_hdr->biheight; cy++){
+		for (uint32_t cx = 0; cx < logo_hdr->biwidth; cx++){
+			uint32_t color = (*(uint32_t*)(&bitmap[cy*scanline + cx*3])) >> 8;
+
+			color = ((color & 0x00FF0000u)) | ((color & 0x000000FFu) << 8) | ((color & 0x0000FF00u) >> 8);
+
+			draw_pixel(color, xc + cx, yc + (logo_hdr->biheight - cy));
+		}
+	}
+	
+	printf("Rendered!\n");
+}
 
 void kmain(){
 	init_video(boot_info->vram, boot_info->width, boot_info->height, boot_info->ppl, boot_info->format);
@@ -97,6 +140,14 @@ void kmain(){
 	printf("DTV BASE: %p\n", _DTV_);
 
 	printf("TLS TEST: %p\n", *tls_ptr(test_thread_data));
+
+	printf("Splash %p / %u b\n", boot_info->splash, boot_info->splash_size);
+
+	struct BmpHeader *logo = boot_info->splash;
+
+	printf("offset %u width %u height %u bits %u\n", (uint64_t)logo->bfoffbits, (uint64_t)logo->biwidth, (uint64_t)logo->biheight, (uint64_t)logo->bibitcount);
+
+	render_logo(logo);
 
 	//for(;;);
 	asm_hlt();

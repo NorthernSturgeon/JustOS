@@ -310,6 +310,7 @@ void init_mm(){
 	}
 
 	mark_busy(boot_info->stack, boot_info->stack_size); // kernel stack
+	if (boot_info->splash) mark_busy(boot_info->splash, round_to(boot_info->splash_size, 4096));
 
 	init_malloc(virt_to_phys(gorl.list[gorl.lenght-1]));
 }
