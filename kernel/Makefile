@@ -20,7 +20,7 @@ LIBC_CFLAGS := $(CFLAGS) -Wno-address-of-packed-member
 
 KERNEL_LDFLAGS := -nostdlib -z relro -z now --warn-unresolved-symbols -h '\JUSTOS\kernel.elf' -I JUSTOS/bootx64.efi -pic --export-dynamic -T script.lds
 
-LIBC_LDFLAGS := -nostdlib -z relro -z now -h '\JUSTOS\libc.so' -shared -T libc.lds
+LIBC_LDFLAGS := -nostdlib -z relro -z now -h '\JUSTOS\xlibc.so' -shared -T xlibc.lds
 
 OUT_DIR := out
 
@@ -55,18 +55,18 @@ clear:
 
 lib: $(LIBC_OBJS)
 	@echo $(LIBC_OBJS)
-	@ld $(LIBC_OBJS) $(LIBC_LDFLAGS) -o $(OUT_DIR)/libc.so
-	@echo libc.so compiled successfully!
+	@ld $(LIBC_OBJS) $(LIBC_LDFLAGS) -o $(OUT_DIR)/xlibc.so
+	@echo xlibc.so compiled successfully!
 
 kernel: lib $(KERNEL_OBJS)
 	@echo $(KERNEL_OBJS)
-	@ld $(KERNEL_OBJS) $(KERNEL_LDFLAGS) -o $(OUT_DIR)/kernel.elf $(OUT_DIR)/libc.so
+	@ld $(KERNEL_OBJS) $(KERNEL_LDFLAGS) -o $(OUT_DIR)/kernel.elf $(OUT_DIR)/xlibc.so
 	@echo kernel.elf compiled successfully!
 
 vhdinstall:
 	losetup --partscan /dev/loop0 ${VHDINSTALLPATH}
 	mount /dev/loop0p1 /mnt
 	cp $(OUT_DIR)/kernel.elf /mnt/JUSTOS
-	cp $(OUT_DIR)/libc.so /mnt/JUSTOS
+	cp $(OUT_DIR)/xlibc.so /mnt/JUSTOS
 	umount /dev/loop0p1
 	losetup -d /dev/loop0

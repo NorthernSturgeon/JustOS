@@ -11,7 +11,7 @@ extern void* _percpu_start_;
 static inline void* tls_ref(size_t off){
 	register void* ptr;
 	asm (
-		"leaq _DTV_@GOTPCREL(%%rip), %0 \n\t"
+		"movq _DTV_@GOTPCREL(%%rip), %0 \n\t"
 		"movq (%0), %0 \n\t"
 		"movq %%gs:(%0), %0 \n\t"
 		:"=r"(ptr)::
@@ -19,7 +19,7 @@ static inline void* tls_ref(size_t off){
 	return ptr + off - (size_t)&_percpu_start_;
 }
 
-#define tls_ptr(var) ((__typeof__(var)*)tls_ref((size_t)&var))
+#define tls_ptr(var) ((__typeof__(var)*)tls_ref((size_t)&(var)))
 
 #define __tls __attribute__((section(".percpu")))
 

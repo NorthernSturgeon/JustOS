@@ -47,6 +47,8 @@ static void parse_exports(hashtab_t *const ctx, libid_t *lib){
 			};
 			ht_insert(ctx, &lib->dynstr[lib->dynsym[i].st_name], &sym);
 		} else if (ELF64_ST_BIND(lib->dynsym[i].st_info) == STB_WEAK && !strcmpa(&lib->dynstr[lib->dynsym[i].st_name], "_DTV_")){
+			// custom address calculation
+			Print(L"_DTV_@%p <- %p\n", (uint64_t*)(lib->image + lib->dynsym[i].st_value), (uint64_t)CONV_PTR(lib->image + 0x1000));
 			*(uint64_t*)(lib->image + lib->dynsym[i].st_value) = (uint64_t)CONV_PTR(lib->image + 0x1000);
 		}
 	}

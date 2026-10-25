@@ -7,15 +7,16 @@
 - Implementation of ***aligned_malloc***
 - Implementaion of ***realloc***
 - С++ support
+- Approximate videomode
+- Correct processing of weak bindings
 
-## [v0.0.7] / NET: N/A
-- License!
-- Improved project structure
-- Fast heap verification
-
-## [v0.0.7-alpha.2] / NET: 2026-10
-- [ ] Logo rendering
-- [ ] *loaded_files* typification
+## [v0.0.7] / NET: 2026-10-24
+- [x] License!
+- [ ] Fast heap verification
+- [ ] Documentation
+- [x] Logo rendering
+- [x] Deployment on removable media
+- [x] Renaming: *`libc.so`* -> *`xlibc.so`*
 
 ## [v0.0.7-alpha.1] / 2026-10-23
 - Prototype of fast heap for small data
