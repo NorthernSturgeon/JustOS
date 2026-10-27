@@ -1538,7 +1538,7 @@ static uint8_t tilde[13] = {
 0b00000000,
 };
 
-volatile void* font_symbol_table[] = {
+void* font_symbol_table[] = {
 	&space, &exclamation, &doublequot, &numbersign,
 	&dollar, &percentsign, &ampersand, &quot,
 	&leftparenthesis, &rightparenthesis, &asterisk, &plus,

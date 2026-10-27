@@ -34,7 +34,7 @@ vhdinstall:
 	mount /dev/loop0p1 /mnt
 	cp $(OUT_DIR)/bootx64.efi /mnt/EFI/Boot
 	cp justboot.tsv /mnt/JUSTOS
-	cp testicon.bmp /mnt/JUSTOS
+	cp ../assets/testicon.bmp /mnt/JUSTOS
 	umount /dev/loop0p1
 	losetup -d /dev/loop0
 

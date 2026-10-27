@@ -42,6 +42,7 @@ CHAR8* tsv_search(CHAR8* base, char* key, UINTN idx){
 		//EOF: \n\r
 		if (*(++base) == '\r') return NULL;
 	}
+
 	//search column
 	UINTN ctr = 0;
 	while (ctr < idx){
@@ -56,6 +57,7 @@ UINTN tsv_listlen(CHAR8* base){
 		Print(L"tsv_listlen: base=NULL!!!\n");
 		for(;;);
 	}
+
 	UINTN ret = 0;
 	for (; *base != '\n'; base++){
 		if (*base == '\0') ret++;
@@ -65,9 +67,10 @@ UINTN tsv_listlen(CHAR8* base){
 
 CHAR8* tsv_next(CHAR8* base){
 	if (!base){
-		Print(L"tsv_listlen: base=NULL!!!\n");
+		Print(L"tsv_next: base=NULL!!!\n");
 		for(;;);
 	}
+
 	for (; *base != '\0'; base++){
 		if (*base == '\n') return NULL;
 	}
@@ -80,8 +83,10 @@ INTN tsv_parseint(CHAR8* base){
 		for(;;);
 	}
 	INTN ret = 0;
+
 	while (*base) base++;
 	base--;
+
 	UINTN factor = 1;
 	while (*base != '\0' && *base != '-'){
 		ret += (*base - 0x30)*factor;
@@ -92,6 +97,9 @@ INTN tsv_parseint(CHAR8* base){
 	return ret;
 }
 
+/**
+ Convert ASCII to UTF16LE
+*/
 CHAR16* makechar16(CHAR8* base){
 	if (!base) return NULL;
 	UINTN len = 1 + strlena(base);

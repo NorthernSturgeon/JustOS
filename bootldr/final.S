@@ -1,10 +1,6 @@
 .global start_kernel
 
-.text/*
-	page_fault_asm:
-		popq %rdi
-		mov %cr2, %rsi
-		jmp page_fault*/
+.text
 	start_kernel:
 		mov %rcx, %cr3 # bye, efi paging
 		# enable SSE support

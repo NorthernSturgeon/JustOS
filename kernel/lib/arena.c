@@ -13,10 +13,6 @@ __tls AllocatorArena *cpu_top_arena = NULL;
 __tls size_t *cpu_pending = NULL;
 __tls size_t cpu_arenas_cnt = 0;
 
-/*
-	TODO: optimal data structure for exclusive access
-*/
-
 static void optimize_arena(AllocatorArena *arena){
 	size_t j = 0;
 	for (size_t i = 0; i < arena->lenght; i++){

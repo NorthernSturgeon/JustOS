@@ -18,6 +18,7 @@
 
 #define STOP() for(;;)
 
+/* virtual address structure at address translation on x86-64 */
 typedef union{
 	UINT64 addr;
 	struct{
@@ -30,6 +31,7 @@ typedef union{
 	} f;
 } virt_addr_t;
 
+/* structure of entry in page tables (according to the Intel SDM) */
 typedef union{
 	UINT64 value;
 	struct{
@@ -50,6 +52,7 @@ typedef union{
 	} f;
 } page_entry_t;
 
+/* boot information structure for the JustOS kernel */
 typedef struct __attribute__((__packed__)){
 	VOID *rtsvcs;
 	VOID *acpi_rdsp;
@@ -72,30 +75,29 @@ typedef struct __attribute__((__packed__)){
 	UINT16 ppl;
 } boot_info_t;
 
-/*
-typedef struct __attribute__((__packed__)){
-   uint16_t offset_1;        // offset bits 0..15
-   uint16_t selector;        // a code segment selector in GDT or LDT
-   uint8_t  ist;             // bits 0..2 holds Interrupt Stack Table offset, rest of bits zero.
-   uint8_t  type_attributes; // gate type, dpl, and p fields
-   uint16_t offset_2;        // offset bits 16..31
-   uint32_t offset_3;        // offset bits 32..63
-   uint32_t zero;            // reserved
-} idt_entry_t;
-
-typedef struct __attribute__((__packed__)){
-	uint16_t limit;
-	void    *base;
-} idtr_t;
-
-idtr_t itdr;
-*/
 #undef DEBUG
+
+/**
+ Setup EfiRuntimeServices support
+ If commented, boot_info->rtsvcs will be set to zero
+*/
 //#define SETVAMAP
+
+/**
+ Enables the workaround for a bug in the UEFI firmware
+ that causes a system crash when an attempt is made
+ to assign a memory type from a range
+ reserved for use by OS developers.
+*/
 #define ovmf_r11337
+
+/* GOP video mode overriding */
 //#define CUSTOM_VIDEOMODE 12
 
-//                     6347393123150700
+/**
+ JustOS makes an assumption that the system has less than 2^48
+ bytes of RAM; otherwise, address translation will be wrong.
+*/
 #define MAX_PHY_ADDR 0x00007fffffffffffull
 
 #ifdef ovmf_r11337
@@ -104,6 +106,7 @@ idtr_t itdr;
 #define KERNEL_MEMORY_TYPE 0x80000000
 #endif
 
+/* Memory allocated via these macroses will be preserved in the kernel */
 #define ALLOC_KPOOL(ptr, size) uefi_call_wrapper(BS->AllocatePool, 3, KERNEL_MEMORY_TYPE, size, ptr)
 #define FREE_KPOOL(ptr) uefi_call_wrapper(BS->FreePool, 1, ptr)
 #define ALLOC_KPAGES(ptr, size) uefi_call_wrapper(BS->AllocatePages, 4, AllocateAnyPages, KERNEL_MEMORY_TYPE, size, ptr)
@@ -112,6 +115,7 @@ idtr_t itdr;
 static inline size_t div_up(size_t a, size_t b) { return (a+b-1)/b; }
 #define TO_PAGES(ptr) div_up(ptr, 4096)
 
+/* Macro for indexing into the EfiMemoryMap, which is pointed to by `mmap` variable */
 #define MMAP(i) ((EFI_MEMORY_DESCRIPTOR*)((UINT8*)mmap+descsize*i))
 
 #define VALID_DESC(desc) ((desc->Type<EfiMaxMemoryType || desc->Type==KERNEL_MEMORY_TYPE) && desc->NumberOfPages && !(desc->PhysicalStart&4095))
@@ -128,43 +132,46 @@ extern VOID start_kernel(boot_info_t *boot_info, VOID *k_entry, VOID *k_stack, V
 
 //extern VOID page_fault_asm();
 
-// #ifdef DEBUG
-// static const WCHAR* memtypeconvert(EFI_MEMORY_TYPE memtype){
-// 	switch (memtype){
-// 	case EfiReservedMemoryType:
-// 		return L"reserved";
-// 	case EfiLoaderCode:
-// 		return L"ldr-code";
-// 	case EfiLoaderData:
-// 		return L"ldr-data";
-// 	case EfiBootServicesCode:
-// 		return L"BS-code ";
-// 	case EfiBootServicesData:
-// 		return L"BS-data ";
-// 	case EfiRuntimeServicesCode:
-// 		return L"RT-code ";
-// 	case EfiRuntimeServicesData:
-// 		return L"RT-data ";
-// 	case EfiConventionalMemory:
-// 		return L"conv-mem";
-// 	case EfiUnusableMemory:
-// 		return L"unusable";
-// 	case EfiACPIReclaimMemory:
-// 		return L"ACPIrecl";
-// 	case EfiACPIMemoryNVS:
-// 		return L"ACPI-NVS";
-// 	case EfiMemoryMappedIO:
-// 		return L"MMIO    ";
-// 	case EfiMemoryMappedIOPortSpace:
-// 		return L"MMIO-PS ";
-// 	case EfiPalCode:
-// 		return L"palcode ";
-// 	default:
-// 		return L"unknown ";
-// 	}
-// }
-// #endif
+#ifdef DEBUG
+static const WCHAR* memtypeconvert(EFI_MEMORY_TYPE memtype){
+	switch (memtype){
+	case EfiReservedMemoryType:
+		return L"reserved";
+	case EfiLoaderCode:
+		return L"ldr-code";
+	case EfiLoaderData:
+		return L"ldr-data";
+	case EfiBootServicesCode:
+		return L"BS-code ";
+	case EfiBootServicesData:
+		return L"BS-data ";
+	case EfiRuntimeServicesCode:
+		return L"RT-code ";
+	case EfiRuntimeServicesData:
+		return L"RT-data ";
+	case EfiConventionalMemory:
+		return L"conv-mem";
+	case EfiUnusableMemory:
+		return L"unusable";
+	case EfiACPIReclaimMemory:
+		return L"ACPIrecl";
+	case EfiACPIMemoryNVS:
+		return L"ACPI-NVS";
+	case EfiMemoryMappedIO:
+		return L"MMIO    ";
+	case EfiMemoryMappedIOPortSpace:
+		return L"MMIO-PS ";
+	case EfiPalCode:
+		return L"palcode ";
+	default:
+		return L"unknown ";
+	}
+}
+#endif
 
+/**
+ Print error message with pause and reboot after
+*/
 VOID Fatality(UINT32 code, UINT32 subcode){
 	Print(L"\nFatality! %d:%d\n", code, subcode);
 	UINTN KeyEvent = 0;
@@ -177,6 +184,9 @@ VOID Fatality(UINT32 code, UINT32 subcode){
 	uefi_call_wrapper(RT->ResetSystem,4,EfiResetCold,EFI_SUCCESS,0,NULL);
 }
 
+/**
+ Wrapper for getting memory map from EFI firmware
+*/
 static VOID GetMMap(
 	EFI_MEMORY_DESCRIPTOR **mmap, UINTN *mmapsize,
 	UINTN *mapkey, UINTN *descsize, 
@@ -231,10 +241,16 @@ UINTN ReadFile(EFI_FILE_HANDLE fileDir, CHAR16 *filename, VOID** buffer, UINTN a
 	return filesz;
 }
 
+/**
+ Free memory of loaded file
+*/
 VOID FileDestructor(VOID* file, UINTN filesz){
 	FREE_KPAGES(file, TO_PAGES(filesz));
 }
 
+/**
+ Preserve memory for the pages tables
+*/
 static EFI_STATUS allocate_ptzone(boot_info_t *boot_info, EFI_MEMORY_DESCRIPTOR *mmap, UINTN num_entries, UINTN descsize){
 	UINT64 totalsize = TO_PAGES(boot_info->vram_size);
 	for(UINT64 cur_entry=0;cur_entry<num_entries;cur_entry++){
@@ -312,36 +328,46 @@ static VOID convert_mmap_to_e820(boot_info_t *boot_info, EFI_MEMORY_DESCRIPTOR *
 	boot_info->mmap_len = num_entries - bad_descs;
 }
 
+/*
+ Create virtual-to-physical memory mapping for a virtual address in the paging tables
+*/
 static VOID alloc_page(boot_info_t *boot_info, virt_addr_t vaddr, UINT64 *free_ptzonesz, UINT16 pml4offset, uint64_t attr){
 	page_entry_t *cur_pt, *prev_pt;
 	cur_pt = GET_PTE(boot_info->ptzone[vaddr.f.pml4+pml4offset].value); //get pdt from pml4
-	if (cur_pt == NULL) { //pdt doesn't exists
+	if (cur_pt == NULL) {
+		//pdt doesn't exists
 		cur_pt = boot_info->ptzone + (boot_info->ptzone_size - (*free_ptzonesz)--)*512; //create pdt
 		boot_info->ptzone[vaddr.f.pml4+pml4offset].value = SET_PTE(cur_pt, DFLT_PTE_ATTR); //set pdt in pml4
 	}
 	prev_pt = cur_pt; //save current pdt
 	cur_pt = GET_PTE(cur_pt[vaddr.f.pdt].value); //get pd in pdt
-	if (cur_pt == NULL) { //pd doesn't exists
+	if (cur_pt == NULL) {
+		//pd doesn't exists
 		cur_pt = boot_info->ptzone + (boot_info->ptzone_size - (*free_ptzonesz)--)*512; //create pd
 		prev_pt[vaddr.f.pdt].value = SET_PTE(cur_pt, DFLT_PTE_ATTR); //set pd in pdt
 	}
 	prev_pt = cur_pt; //save current pd
 	cur_pt = GET_PTE(cur_pt[vaddr.f.pd].value); //get pt from pd
-	if (cur_pt == NULL) { //pt doesn't exists
+	if (cur_pt == NULL) {
+		//pt doesn't exists
 		cur_pt = boot_info->ptzone + (boot_info->ptzone_size - (*free_ptzonesz)--)*512; //create pt
 		prev_pt[vaddr.f.pd].value = SET_PTE(cur_pt, DFLT_PTE_ATTR); //set pt in pd
 	}
 	cur_pt[vaddr.f.pt].value = SET_PTE(vaddr.addr, attr); //set page in pt
 }
 
+/**
+ Setup virtual memory for kernel
+ */
 static VOID setup_paging(boot_info_t *boot_info, EFI_MEMORY_DESCRIPTOR *mmap, UINTN num_entries, UINTN descsize){
 	UINT64 cur_entry;
 	virt_addr_t vaddr;
 
 	UINT64 free_ptzonesz=boot_info->ptzone_size-1; //first page of boot_info->ptzone is pml4
 	printf("free_ptzonesz (bytes): %u\r\n", free_ptzonesz<<12);
-	printf("start kernel at: %p\r\n", start_kernel); //cr3 reload in start_kernel, so it must be mapped in both higher and lower halves
+	printf("start kernel at: %p\r\n", start_kernel);
 	
+	//cr3 reload in start_kernel, so it must be mapped in both higher and lower halves
 	vaddr = (virt_addr_t)((UINT64)start_kernel&(MAX_ADDRESS<<12));
 	printf("1st startkernel page: %p\r\n", vaddr.addr);
 	printf("2nd startkernel page: %p\r\n", vaddr.addr+4096);
@@ -414,6 +440,10 @@ static VOID load_splash(boot_info_t *boot_info, CHAR8* tsv, EFI_FILE_HANDLE root
 	FreePool(tmp);
 }
 
+/**
+ Try to set requested screen resolution (tw x th)
+ Fallback to native videomode if it's impossible
+*/
 static VOID setup_video(boot_info_t *boot_info, INTN tw, INTN th){
 	Print(L"tw=%lld th=%lld\n", tw, th);
 
@@ -477,33 +507,37 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 
 	register EFI_STATUS status; //one variable for all
 
-	//set some f
+	// get pointer to ACPI structures
 	boot_info_t boot_info;
 
 	setup_acpi(&boot_info);
 	
-	//load the kernel
-	///open volume
+	// load the kernel
+	/// open volume
 	EFI_FILE_HANDLE root;
 	status = OpenRoot(ImageHandle, &root);
 	if (EFI_ERROR(status)) Fatality(LDR_DISK, status);
 
+	/// read configuration
 	CHAR8 *tsv_file;
 	UINTN tsv_size = ReadFile(root, L"\\JUSTOS\\justboot.tsv", (VOID**)&tsv_file, 0);
 	CHAR8 *tsv = tsv_init(tsv_file, tsv_size);
 	FileDestructor(tsv_file, tsv_size);
 
+	/// set videomode
 	setup_video(
 		&boot_info,
 		tsv_parseint(tsv_search(tsv, "video", 1)),
 		tsv_parseint(tsv_search(tsv, "video", 2))
 	);
 
+	/// parse size of kernel's stack
 	boot_info.stack_size = tsv_parseint(tsv_search(tsv, "stack", 1));
 	Print(L"D: stack size: %llu\n", boot_info.stack_size);
 
 	load_splash(&boot_info, tsv, root);
 
+	/// get path to the kernel
 	CHAR8* kernelpath = tsv_search(tsv, "kernel", 1);
 	if (!kernelpath) Fatality(LDR_CFG, 0);
 
@@ -512,8 +546,9 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 	//Print(L"%s \n", tmp);
 	FreePool(tmp);
 
+	// Dynamic linking for the kernel
 	dl_init(root);
-	libid_weakptr kernel_lib = dl_process(kernelpath, true);
+	libid_weakptr kernel_lib = dl_process(kernelpath, TRUE);
 
 	VOID *kernel = kernel_lib->image;
 	boot_info.kernel_size = kernel_lib->imagesize;
@@ -525,11 +560,8 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 	if (!boot_info.stack) Fatality(LDR_MEM, 9);
 	register UINT64 stack = (UINT64)CONV_PTR(boot_info.stack+boot_info.stack_size);
 	
-	//check elf
+	// get entry point of the kernel
 	UINT64 entry = ((Elf64_Ehdr*)kernel)->e_entry;
-	
-	//EXIT BOOT SERVICES
-	//uefi_call_wrapper(ST->ConOut->ClearScreen, 1, ST->ConOut);
 
 	dl_fini(&boot_info.files, &boot_info.files_cnt);
 	boot_info.files = CONV_PTR(boot_info.files);
@@ -538,28 +570,33 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 	UINTN mmapsize=1, mapkey, descsize, num_entries;
 	UINT32 descver;
 
+	// preserve memory for page tables
 	GetMMap(&mmap, &mmapsize, &mapkey, &descsize, &descver, &num_entries);
 	status = allocate_ptzone(&boot_info, mmap, num_entries, descsize);
 
-	// #ifdef DEBUG
-	// GetMMap(&mmap, &mmapsize, &mapkey, &descsize, &descver, &num_entries);
-	// register UINTN i = 0;
-	// for (;i < num_entries; i++) {
-	// 	register EFI_MEMORY_DESCRIPTOR *desc = MMAP(i);
-	// 	Print(L"%s %p %llu ", memtypeconvert(desc->Type), desc->PhysicalStart, desc->NumberOfPages);
-	// 	if (desc->Attribute&EFI_MEMORY_UC) Print(L"UC ");
-	// 	if (desc->Attribute&EFI_MEMORY_WC) Print(L"WC ");
-	// 	if (desc->Attribute&EFI_MEMORY_WT) Print(L"WT ");
-	// 	if (desc->Attribute&EFI_MEMORY_WB) Print(L"WB ");
-	// 	if (desc->Attribute&EFI_MEMORY_UCE) Print(L"UCE ");
-	// 	if (desc->Attribute&EFI_MEMORY_RP) Print(L"RP ");
-	// 	if (desc->Attribute&EFI_MEMORY_WP) Print(L"WP ");
-	// 	if (desc->Attribute&EFI_MEMORY_XP) Print(L"XP ");
-	// 	if (desc->Attribute&EFI_MEMORY_RUNTIME) Print(L"RT ");
-	// 	Print(L"\n");
-	// }
-	// #endif
+	#ifdef DEBUG
+	// print memory map
+	GetMMap(&mmap, &mmapsize, &mapkey, &descsize, &descver, &num_entries);
+	register UINTN i = 0;
+	for (;i < num_entries; i++) {
+		register EFI_MEMORY_DESCRIPTOR *desc = MMAP(i);
+		Print(L"%s %p %llu ", memtypeconvert(desc->Type), desc->PhysicalStart, desc->NumberOfPages);
+		if (desc->Attribute&EFI_MEMORY_UC) Print(L"UC ");
+		if (desc->Attribute&EFI_MEMORY_WC) Print(L"WC ");
+		if (desc->Attribute&EFI_MEMORY_WT) Print(L"WT ");
+		if (desc->Attribute&EFI_MEMORY_WB) Print(L"WB ");
+		if (desc->Attribute&EFI_MEMORY_UCE) Print(L"UCE ");
+		if (desc->Attribute&EFI_MEMORY_RP) Print(L"RP ");
+		if (desc->Attribute&EFI_MEMORY_WP) Print(L"WP ");
+		if (desc->Attribute&EFI_MEMORY_XP) Print(L"XP ");
+		if (desc->Attribute&EFI_MEMORY_RUNTIME) Print(L"RT ");
+		Print(L"\n");
+	}
+	#endif
 
+	// EXIT BOOT SERVICES
+
+	//uefi_call_wrapper(ST->ConOut->ClearScreen, 1, ST->ConOut);
 	register UINT8 attempts = 0;
 	asm volatile ("cli \n":::"memory");
 
@@ -574,10 +611,12 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 	if (attempts == 4){
 		Print(L"Mission failed! Retreat! See you next time, kernel...\n");
 		STOP();
-	}	
+	}
 
+	// initialize rendering
 	init_video(boot_info.vram, boot_info.width, boot_info.height);
 
+	// white on black
 	set_color(0x00ffffff, 0x00000000);
 	//fill_rect(0x00ffffff, 50, 50, 50, 50);
 	//draw_pixel(0x0000ff00, 1919, 1079);
@@ -586,6 +625,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 	printf("descriptor size:%u\r\n", (UINT64)descsize);
 	printf("descriptor ver:%u\r\n", (UINT64)descver);
 
+	// font test
 	printf("0123456789abcdef\r\nghijklmnopqrstuvwxyz\r\n!?#$%%&\"'()*+-,./@\\\r\nABCDEFGHIJKLM\r\nNOPQRSTUVWXYZ[]{}:;`~_^|<=>\r\n");
 
 	setup_paging(&boot_info, mmap, num_entries, descsize);
@@ -609,7 +649,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 
 	convert_mmap_to_e820(&boot_info, mmap, num_entries, descsize);
 
-	//start kernel
+	// start kernel
 	if (entry < 0x1000) entry += 0x1000;
 
 	stack &= UINT64_MAX^0xF;
@@ -620,13 +660,13 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 	printf("stack: %p\r\n", stack);
 	printf("ptzone: %p\r\n", boot_info.ptzone);
 	
-	//convert boot_info pointers
+	/// convert boot_info pointers
 	boot_info.mmap = CONV_PTR(boot_info.mmap);
 	boot_info.vram = CONV_PTR(boot_info.vram);
 	boot_info.ptzone = CONV_PTR(boot_info.ptzone);
 	boot_info.stack = CONV_PTR(boot_info.stack);
 
-	//copy boot_info to kernel
+	/// copy boot_info into kernel
 	RtCopyMem((UINT8*)kernel+4096, &boot_info, sizeof(boot_info));
 
 	printf("We are ready to start!\r\n");

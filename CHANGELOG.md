@@ -2,21 +2,25 @@
     of the JUSTOS
 ### Current stable version: [v0.0.6](#v006--2026-07-31)
 
-## [Unversioned] / NET: N/A
+## [Unversioned] / EST: N/A
 - Optimization of ***strlen***
 - Implementation of ***aligned_malloc***
 - Implementaion of ***realloc***
 - С++ support
-- Approximate videomode
+- Approximate videomode setup
 - Correct processing of weak bindings
+- New place for the *boot_info*
 
-## [v0.0.7] / NET: 2026-10-24
+## [v0.0.7] / EST: 2026-11-01
+### Common
 - [x] License!
 - [ ] Fast heap verification
 - [ ] Documentation
 - [x] Logo rendering
 - [x] Deployment on removable media
+### API
 - [x] Renaming: *`libc.so`* -> *`xlibc.so`*
+- [x] Changed return type for *rwlock_\*_crit* from `uint8_t` to `bool`
 
 ## [v0.0.7-alpha.1] / 2026-10-23
 - Prototype of fast heap for small data

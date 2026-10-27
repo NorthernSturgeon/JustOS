@@ -3,7 +3,7 @@
 
 typedef unsigned char uint8_t;
 
-extern volatile void* font_symbol_table[];
+extern void* font_symbol_table[];
 extern size_t font_symbol_table_size;
 
 extern uint16_t font_width;

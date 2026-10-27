@@ -2,7 +2,7 @@
 
 source '../local.env'
 
-wants="bootldr/out/bootx64.efi bootldr/testicon.bmp kernel/out/kernel.elf kernel/out/xlibc.so"
+wants="bootldr/out/bootx64.efi assets/testicon.bmp kernel/out/kernel.elf kernel/out/xlibc.so"
 
 data=($wants)
 

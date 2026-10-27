@@ -9,7 +9,7 @@ static uint16_t repeat = 0;
 //                            #DF           #TS #NP #SS #GP #PF            #AC             #CP             #VC             #SX
 #define HAS_CODE(intv) ((intv == 8) || (intv >= 10 && intv <= 14) || (intv == 17) || (intv == 21) || (intv == 29) || (intv == 30))
 
-uint8_t isr_common(uint8_t intn, uint64_t* stack){
+bool isr_common(uint8_t intn, uint64_t* stack){
 	printf("%u %p %p %p %p %p %p\n", (uint64_t)intn, *(stack), *(stack+1), *(stack+2), *(stack+3), *(stack+4), *(stack+5));
 	if (intn == 14){
 		uint64_t cr2;

@@ -1,3 +1,5 @@
+// from kernel/video.c
+
 #include "lib/types.h"
 #include "lib/font.h"
 //#include "lib/mem.h"

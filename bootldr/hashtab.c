@@ -8,18 +8,30 @@ extern _Noreturn VOID Fatality(UINT32 code, UINT32 subcode); //from bootloader.c
 
 #define SEED 17362530560801976147ull
 
+/*
+ Generate hash from key
+*/
 static inline uint64_t hashstr(const char* x){
 	return xxhash64(x, strlena(x), SEED);
 }
 
+/*
+ Internal function for direct access to element in table
+*/
 static inline ht_entry_t* index(ht_entry_t *table, size_t i, size_t ts){
 	return (ht_entry_t*)((uint8_t*)table + ts*i);
 }
 
+/*
+ Access to element in table by ordinal index
+*/
 ht_entry_t* ht_index(hashtab_t *tab, size_t i){
 	return index(tab->table, i, tab->totalsize);
 }
 
+/*
+ Initialize descriptor of a table, allocate memory
+*/
 void ht_init(hashtab_t *tab, size_t data_size, size_t init_cap){
 	tab->table = NULL;
 	tab->capacity = 0;
@@ -28,8 +40,13 @@ void ht_init(hashtab_t *tab, size_t data_size, size_t init_cap){
 	ht_realloc(tab, init_cap);
 }
 
+/*
+ Resize the table and rehash
+*/
 void ht_realloc(hashtab_t *tab, size_t new_cap){
 	if (new_cap <= tab->entries) return;
+
+	// allocate more memory
 	ht_entry_t *new_tab = AllocateZeroPool(new_cap*tab->totalsize);
 	if (!new_tab) {
 		ht_destroy(tab);
@@ -55,6 +72,9 @@ void ht_realloc(hashtab_t *tab, size_t new_cap){
 	tab->capacity = new_cap;
 }
 
+/*
+ Insert data into the table
+*/
 void* ht_insert(hashtab_t* restrict tab, const char* restrict key, void* restrict data){
 	if (tab->capacity < 2) ht_realloc(tab, 2);
 	else if (tab->entries*100 / tab->capacity >= 50) ht_realloc(tab, tab->capacity*2);
@@ -75,6 +95,9 @@ void* ht_insert(hashtab_t* restrict tab, const char* restrict key, void* restric
 	return ret;
 }
 
+/*
+ Read data from the table by key
+*/
 void* ht_read(hashtab_t* restrict tab, const char* restrict name){
 	if (!tab->capacity) return NULL;
 	uint64_t hash = hashstr(name);
@@ -91,6 +114,9 @@ void* ht_read(hashtab_t* restrict tab, const char* restrict name){
 	return NULL;
 }
 
+/*
+ Free memory, invalidate descriptor
+*/
 void ht_destroy(hashtab_t *tab){
 	if (tab->table) FreePool(tab->table);
 	tab->table = (void*)BAD_POINTER; //fool-proofing: use-after-free will be seen via CR2 when #PF occurs

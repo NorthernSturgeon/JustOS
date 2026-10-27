@@ -13,8 +13,7 @@
 
 .text
 isr_common_stub:
-	# save caller-saved GPR
-	pushfq
+	# save caller-saved GPRs
 	push %rax
 	push %rdi
 	push %rsi
@@ -26,10 +25,10 @@ isr_common_stub:
 	push %r11
 
 	# extract int vector
-	movb 80(%rsp), %dil
+	movb 72(%rsp), %dil
 
 	# get pointer to stack at int
-	leaq 88(%rsp), %rsi
+	leaq 80(%rsp), %rsi
 
 	# we need register for stack operations
 	push %r12
@@ -58,7 +57,7 @@ isr_common_stub:
 	# check if we need to pop error code
 	test %al, %al
 
-	# restore GPR (pop instruction does not affect the flags)
+	# restore GPRs (pop instruction does not affect the flags)
 	pop %r12
 	pop %r11
 	pop %r10
@@ -73,14 +72,10 @@ isr_common_stub:
 	# if zero - there is no error code on stack
 	jz 1f
 	# pop it otherwise
-	popfq
-	lea 16(%rsp), %rsp
-	iretq
-
+	add $8, %rsp
 1:
-	popfq
 	# pop int vector
-	lea 8(%rsp), %rsp
+	add $8, %rsp
 
 	# final
 	iretq

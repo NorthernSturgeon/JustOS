@@ -80,7 +80,7 @@ void mark_free(void* ptr, size_t size){
 	uint64_t start = (uint64_t)ptr;
 	uint64_t end = start+size;
 
-	uint8_t irq_state = rwlock_lock_crit(&gorl.rwlock);
+	bool irq_state = rwlock_lock_crit(&gorl.rwlock);
 	// remove zero-lenght
 	optimize_gorl();
 
@@ -126,7 +126,7 @@ void mark_busy(void* ptr, size_t size){
 	uint64_t start = (uint64_t)ptr;
 	uint64_t end = start+size;
 	size_t si = 0;
-	uint8_t irq_state = rwlock_lock_crit(&gorl.rwlock);
+	bool irq_state = rwlock_lock_crit(&gorl.rwlock);
 	// remove zero-lenght
 	optimize_gorl();
 
