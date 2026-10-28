@@ -6,32 +6,24 @@
 #include "tsv.h"
 #include <alloca.h>
 
+#define USE_ALLOCA
+
 //from bootloader.c (TODO: create bootloader.h)
 #define CONV_PTR(p) (void*)(((UINT64)(p))|0xffff800000000000ull)
 extern __attribute__((noreturn)) VOID Fatality(UINT32 code, UINT32 subcode);
 extern UINTN ReadFile(EFI_FILE_HANDLE fileDir, CHAR16 *filename, VOID** buffer, UINTN addend);
 extern VOID FileDestructor(VOID* file, UINTN filesz);
 
-static EFI_FILE_HANDLE dl_workdir;
-
-static hashtab_t global_exports;
-static hashtab_t loaded_libs;
-
-// uint32_t gnuhash(const char *name){
-// 	uint32_t h = 5381;
-// 	for (; *name; name++){
-// 		h = h * 33 + (unsigned char)(*name);
-// 	}
-// 	return (size_t)h;
-// }
-
 #define ALLOC_KPAGES(ptr, size) uefi_call_wrapper(BS->AllocatePages, 4, AllocateAnyPages, EfiLoaderData, size, ptr)
 static inline size_t div_up(size_t a, size_t b) { return (a+b-1)/b; }
 #define TO_PAGES(ptr) div_up(ptr, 4096)
+// ---
+
+static EFI_FILE_HANDLE dl_workdir;
+static hashtab_t global_exports;
+static hashtab_t loaded_libs;
 
 #define foreach_needed(d, code) for (Elf64_Dyn *c = d; c->d_tag != DT_NULL; c++) { if (c->d_tag == DT_NEEDED) { code }}
-
-#define USE_ALLOCA
 
 void dl_init(EFI_FILE_HANDLE workdir){
 	dl_workdir = workdir;
@@ -46,10 +38,6 @@ static void parse_exports(hashtab_t *const ctx, libid_t *lib){
 				.addr = (uint64_t)CONV_PTR(lib->image + lib->dynsym[i].st_value)
 			};
 			ht_insert(ctx, &lib->dynstr[lib->dynsym[i].st_name], &sym);
-		} else if (ELF64_ST_BIND(lib->dynsym[i].st_info) == STB_WEAK && !strcmpa(&lib->dynstr[lib->dynsym[i].st_name], "_DTV_")){
-			// custom address calculation
-			Print(L"_DTV_@%p <- %p\n", (uint64_t*)(lib->image + lib->dynsym[i].st_value), (uint64_t)CONV_PTR(lib->image + 0x1000));
-			*(uint64_t*)(lib->image + lib->dynsym[i].st_value) = (uint64_t)CONV_PTR(lib->image + 0x1000);
 		}
 	}
 }
@@ -58,7 +46,7 @@ static libid_weakptr get_file(hashtab_t *const ctx, char* path){
 	//checking if library loaded already
 	libid_weakptr ret = ht_read(&loaded_libs, path);
 	if (ret) return ret;
-	libid_t nl; //new library
+	libid_t nl = {0}; //new library
 
 	//convert path to UTF-16LE
 	CHAR16* pool = makechar16(path);
@@ -67,8 +55,7 @@ static libid_weakptr get_file(hashtab_t *const ctx, char* path){
 	nl.imagesize = ReadFile(dl_workdir, pool, &nl.image, 0);
 	//Print(L"image: %p\n", nl.image);
 
-	if (!nl.image) goto fail;
-	if (check_elf(nl.image)) goto fail;
+	if (!nl.image || check_elf(nl.image)) goto fail;
 
 	nl.dynamic = get_dyn(nl.image);
 	if (!nl.dynamic) goto fail;
@@ -89,12 +76,12 @@ static libid_weakptr get_file(hashtab_t *const ctx, char* path){
 	nl.tls_area = NULL;
 	nl.tls_size = 0;
 
-	Elf64_Shdr* percpu = get_section_by_name(nl.image, ".percpu");
+	Elf64_Phdr* percpu = get_segment_by_type(nl.image, PT_TLS);
 	if (percpu){
-		nl.tls_size = percpu->sh_size;
+		nl.tls_size = percpu->p_memsz;
 		if (EFI_ERROR(ALLOC_KPAGES(&nl.tls_area, nl.tls_size))) goto fail;
-
-		CopyMem(nl.tls_area, nl.image + percpu->sh_addr, nl.tls_size);
+		ZeroMem(nl.tls_area, nl.tls_size); // for .tbss
+		CopyMem(nl.tls_area, nl.image + percpu->p_offset, percpu->p_filesz); // copy .tdata
 		*(uint64_t*)(nl.image + 0x0ff8) = (uint64_t)CONV_PTR(nl.tls_area);
 	}
 
@@ -133,11 +120,11 @@ static void setup_namespace(hashtab_t *const ctx, libid_t *lib){
 }
 
 static void resolve(hashtab_t *const ctx, libid_t *lib){
-	if (!lib->neededcnt) return; //already resolved, stop recursion
-	//Print(L"R rela: %p\n", lib->rela);
+	if (lib->neededcnt == SIZE_MAX) return; //already resolved, stop recursion
+	Print(L"R rela: %p needed %llu\n", lib->rela, lib->neededcnt);
 	
 	for (size_t i = 0; i < lib->relacnt; i++){
-		void* got_entry = lib->image+lib->rela[i].r_offset;
+		void* got_entry = lib->image + lib->rela[i].r_offset;
 		//Print(L"%llu ", ELF64_R_TYPE(lib->rela[i].r_info));
 		switch (ELF64_R_TYPE(lib->rela[i].r_info)){
 			case R_X86_64_RELATIVE:
@@ -165,12 +152,16 @@ static void resolve(hashtab_t *const ctx, libid_t *lib){
 			case R_X86_64_NONE:
 				//Print(L"NONE\n");
 				break;
+			case R_X86_64_DTPMOD64:
+				Print(L"R_X86_64_DTPMOD64@%p <- %p\n", got_entry, CONV_PTR(lib->image + 0x1000));
+				*(uint64_t*)got_entry = (uint64_t)CONV_PTR(lib->image + 0x1000);
+				break;
 			default:
 				Fatality(LDR_ELF, ELF64_R_TYPE(lib->rela[i].r_info));
 				//break;
 		}
 	}
-	lib->neededcnt = 0; //resolved
+	lib->neededcnt = SIZE_MAX; //resolved
 
 	foreach_needed(lib->dynamic,
 		// no more insertions to loaded_libs
@@ -185,6 +176,7 @@ libid_weakptr dl_process(char *path, const BOOLEAN global_f){
 #else
 	hashtab_t *const ctx = global_f ? &global_exports : alloca(sizeof(hashtab_t));
 #endif
+	// init ctx if local
 	if (!global_f) ht_init(ctx, sizeof(symbol_t), 8);
 
 	libid_weakptr module = get_file(ctx, path);

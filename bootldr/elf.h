@@ -9,9 +9,11 @@
 #define R_X86_64_GLOB_DAT	6
 #define R_X86_64_JUMP_SLOT	7
 #define R_X86_64_RELATIVE	8
+#define R_X86_64_DTPMOD64	16
 
 extern uint8_t check_elf(void* file);
 extern Elf64_Shdr *get_section_by_name(Elf64_Ehdr* image, const char* name);
+extern Elf64_Phdr *get_segment_by_type(Elf64_Ehdr* image, Elf64_Word type);
 extern Elf64_Dyn* get_dyn(Elf64_Ehdr* image);
 extern Elf64_Dyn* get_dynent(Elf64_Dyn* start, Elf64_Sxword tag);
 extern void* off2ptr(void* base, Elf64_Dyn* ent); //return ent ? base + ent->d_un.d_val : NULL;

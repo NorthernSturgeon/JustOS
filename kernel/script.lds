@@ -8,11 +8,6 @@ SECTIONS{
 	}
 	.data ALIGN(4096):{ *(.data) *(.bss)}
 
-	.percpu : {
-		PROVIDE_HIDDEN(_percpu_start_ = .);
-		*(.percpu)
-	}
-
 	/DISCARD/ :{
 		*(.comment)
 		*(.note*)

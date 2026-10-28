@@ -62,7 +62,29 @@ void stdout(const char *str, size_t len){
 	}
 }
 
+int numberOfSetBits(uint32_t i)
+{
+     // Java: use int, and use >>> instead of >>. Or use Integer.bitCount()
+     // C or C++: use uint32_t
+     i = i - ((i >> 1) & 0x55555555);        // add pairs of bits
+     i = (i & 0x33333333) + ((i >> 2) & 0x33333333);  // quads
+     i = (i + (i >> 4)) & 0x0F0F0F0F;        // groups of 8
+     i *= 0x01010101;                        // horizontal sum of bytes
+     return  i >> 24;               // return just that top byte (after truncating to 32-bit even when int is wider than uint32_t)
+}
+
+void clear_console(){
+	basex = 0;
+	basey = 0;
+	x = 0;
+	y = 0;
+	scrool_flag = false;
+	struct screen_resolution sr = get_res();
+	fill_rect(backcolor, 0, 0, sr.width, sr.height);
+}
+
 void printf(const char *str, ...){
+	uint32_t fc_old = forecolor, bc_old = backcolor;
 	uint64_t u_buffer;
 	unsigned char p_buffer[8] = {0};
 	va_list data;
@@ -81,7 +103,11 @@ void printf(const char *str, ...){
 			case '\0':
 				return;
 			case 'p':
-				*((uint64_t*)&p_buffer) = va_arg(data, uint64_t);
+				uint64_t tmp = va_arg(data, uint64_t);
+				*((uint64_t*)&p_buffer) = tmp;
+				tmp &= UINT32_MAX;
+				tmp >>= 13;
+				set_color(((tmp*3741)&0x00ffffff), 0);
 				for (uint8_t i = 0; i < 8; i++){
 					out_buffer[15-2*i] = (p_buffer[i]&15)+0x30;
 					if (out_buffer[15-2*i] >= 0x3A) out_buffer[15-2*i] += 7;
@@ -128,6 +154,7 @@ void printf(const char *str, ...){
 				flen = 0;
 			}
 			stdout(out_buffer, flen);
+			set_color(fc_old, bc_old);
 		}
 	}
 	stdout(str0, str - str0);

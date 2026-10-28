@@ -4,6 +4,7 @@
 #include "tls.h"
 #include "physmem.h"
 #include <stdatomic.h>
+#include "lib/console.h"
 
 //from lib/memory.c
 extern uint64_t *size_table;
@@ -156,9 +157,10 @@ static void mark_busy(AllocatorArena *arena, alist_t start, alist_t end){
 */
 static AllocatorArena* create_arena(){
 	AllocatorArena *new_arena = allocate_pages(ARENA_SIZE/PAGE_SIZE);
+	log_debug("create_arena: %p old_cnt=%u\n", new_arena, cpu_arenas_cnt);
 	if (!new_arena) return NULL;
 
-	new_arena->pending = tls_ptr(cpu_pending);
+	new_arena->pending = &cpu_pending;
 	new_arena->lenght = 2;
 	new_arena->list[0] = NEW_ARENA_SOL;
 	new_arena->list[1] = NEW_ARENA_EOL;
@@ -171,23 +173,24 @@ static AllocatorArena* create_arena(){
 
 	OPT_BARRIER();
 
-	AllocatorArena **top_arena = tls_ptr(cpu_top_arena);
-	new_arena->next = *top_arena;
-	*top_arena = new_arena;
+	new_arena->next = cpu_top_arena;
+	cpu_top_arena = new_arena;
 
-	*tls_ptr(cpu_arenas_cnt) += 1;
+	cpu_arenas_cnt += 1;
 
 	return new_arena;
 }
 
 static void destroy_arena(AllocatorArena* arena, AllocatorArena* prev){
+	log_debug("destroy_arena(%p)\n", arena);
+
 	if (arena->max_free_size < NEW_ARENA_FREESIZE) {
-		// printf("[WARN] Prevention an attempt to destroy non-empty arena\n");
+		log_warn("[WARN] Prevention an attempt to destroy non-empty arena\n");
 		return;
 	}
 
 	if (prev) prev->next = arena->next;
-	else *tls_ptr(cpu_top_arena) = arena->next;
+	else cpu_top_arena = arena->next;
 
 	OPT_BARRIER();
 
@@ -234,13 +237,13 @@ static AllocatorArena* split(AllocatorArena* start, size_t n){
 
 // iterative merge sort (reversed)
 static void sort_and_update(){
-	size_t lenght = *tls_ptr(cpu_arenas_cnt);
+	size_t lenght = cpu_arenas_cnt;
 	if (lenght < 2) return;
 
 	AllocatorArena *head, **tail;
 
 	for (size_t step = 1; step < lenght; step *= 2){
-		tail = tls_ptr(cpu_top_arena);
+		tail = &cpu_top_arena;
 		head = *tail;
 
 		while (head){
@@ -256,6 +259,7 @@ static void sort_and_update(){
 }
 
 static void sift_down(AllocatorArena *arena, AllocatorArena *prev){
+	size_t counter = 0;
 	// so prev->next is arena
 	for (
 		AllocatorArena *target = arena->next;
@@ -267,18 +271,22 @@ static void sift_down(AllocatorArena *arena, AllocatorArena *prev){
 		target->next = arena;
 
 		if (prev) prev->next = target;
-		else *tls_ptr(cpu_top_arena) = target;
+		else cpu_top_arena = target;
 
 		prev = target;
+		counter++;
 	}
+	if (counter) {log_debug("sift_down: %u times\n", counter); }
 }
 
 static bool recalc_and_check(){
-	bool seen_empty = false, unsorted = false;
+	bool seen_empty = false;
+	size_t unsorted = 0;
 
-	AllocatorArena *current = *tls_ptr(cpu_top_arena), *prev = NULL;
+	AllocatorArena *current = cpu_top_arena, *prev = NULL;
 
 	while (current){
+		log_debug("recalc on arena %p \n", current);
 		if (current->flags) arena_recalc(current);
 
 		if (current->max_free_size == NEW_ARENA_FREESIZE){
@@ -292,18 +300,20 @@ static bool recalc_and_check(){
 		}
 
 		if (prev && prev->max_free_size < current->max_free_size){
-			unsorted = true;
+			unsorted++;
 		}
 
 		prev = current;
 		current = current->next;
 	}
 
-	return unsorted;
+	log_debug("recalc_and_check: %u ", unsorted);
+	return (bool)unsorted;
 }
 
 static void aalloc_gc(){
-	size_t *val = NULL, *prev = (size_t*)tls_ptr(cpu_pending);
+	log_debug("aalloc_gc(): ");
+	size_t *val = NULL, *prev = (size_t*)&cpu_pending, counter = 0;
 	val = (size_t*)atomic_exchange_explicit(prev, (size_t)val, __ATOMIC_ACQUIRE);
 	AllocatorArena *arena;
 	
@@ -313,13 +323,15 @@ static void aalloc_gc(){
 			arena = (AllocatorArena*)size_table[ST_IDX(val)];
 			alist_t start = ((uint8_t*)val - (uint8_t*)arena)/ARENA_RESOLUTION;
 			size_t *next = (size_t*)*val;
+			// log_debug("    lazy_free(%u, %u) @ %p\n", (size_t)start*ARENA_RESOLUTION, *(val+1), arena);
 			mark_free(arena, start, start + *(val+1)); //little-endian only!
 			val = next;
+			counter++;
 		}
-
 		// sort arenas
 		if (recalc_and_check()) sort_and_update();
 	}
+	log_debug("freed %u entries\n", counter);
 }
 
 void* arena_allocate(size_t size){
@@ -330,20 +342,20 @@ void* arena_allocate(size_t size){
 
 	preempt_disable();
 retry:
-	AllocatorArena *current = *tls_ptr(cpu_top_arena), *prev = NULL;
+	AllocatorArena *current = cpu_top_arena, *prev = NULL;
 
 	if (!current || current->max_free_size < size) {
 		if (current) {
 			aalloc_gc();
-			current = *tls_ptr(cpu_top_arena);
-			if (current->max_free_size >= size) goto found;
+			current = cpu_top_arena;
+			if (current->max_free_size >= size) goto find_best;
 		}
 		current = create_arena();
 		if (!current) {
 			preempt_enable();
 			return NULL;
 		}
-	} else {
+	} else { find_best:
 		AllocatorArena* next;
 		while ((next = current->next)){
 			if (next->max_free_size < size) goto found;
@@ -378,7 +390,7 @@ found:
 	}
 
 	if (best == SIZE_MAX){
-		// printf("[WARN] arena->max_free_size desynchronization\n");
+		log_warn("[WARN] arena->max_free_size desynchronization\n");
 		current->max_free_size = max1;
 		sift_down(current, prev);
 		goto retry;
@@ -395,6 +407,8 @@ found:
 
 	preempt_enable();
 
+	log_debug("arena_allocate(%u): arena %p offset %u\n", size, current, (void*)ptr - (void*)current);
+
 	*ptr = 0;
 	*++ptr = size;
 	return ++ptr;
@@ -402,6 +416,8 @@ found:
 
 void arena_free(AllocatorArena *arena, void* ptr){
 	ptr = (void*)(((uint64_t)ptr) - 16); // ptr is void*
+	// log_debug("arena_free(): arena %p offset %u\n", arena, (void*)ptr - (void*)arena);
+
 	size_t *val = atomic_load_explicit(arena->pending, __ATOMIC_RELAXED);
 
 	do{

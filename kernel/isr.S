@@ -7,6 +7,7 @@
  * The code is thoroughly commented, so I have nothing to add here...
  */
 .globl isr_common_stub
+.hidden isr_common_stub
 .extern isr_common
 
 .type isr_common_stub, STT_FUNC

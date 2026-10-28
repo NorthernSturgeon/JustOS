@@ -12,17 +12,18 @@
  * length and operand size on the stack.
  */
 .globl isr_start
+.hidden isr_start
 .extern isr_common_stub
 
 .macro generator from, to
 	.byte 0x6a # push imm8 (2 bytes)
 	.byte \from
 	jmp isr_common_stub # jmp rel32 (5 bytes)
-	# total: 7 bytes per entry point
 .if \to-\from
 	generator "(\from+1)",\to
 .endif
 .endm
+# 7 bytes per entry point -> 3840 bytes for whole table
 
 .type isr_start, STT_FUNC
 

@@ -17,4 +17,21 @@
 
 #define OPT_BARRIER() asm volatile ("" ::: "memory")
 
+#if defined(LOG_DEBUG)
+
+#define log_debug(...) printf(__VA_ARGS__)
+#define log_warn(...) printf(__VA_ARGS__)
+
+#elif defined(LOG_WARN)
+
+#define log_debug(...)
+#define log_warn(...) printf(__VA_ARGS__)
+
+#else
+
+#define log_debug(...)
+#define log_warn(...)
+
+#endif
+
 #endif

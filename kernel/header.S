@@ -1,5 +1,6 @@
 .globl boot_info
 .globl kentry
+.globl __tls_get_addr
 .globl asm_hlt
 
 .text
@@ -7,10 +8,14 @@
 		.rept 16
 		.quad 0
 		.endr
+	__tls_get_addr:
+		movq (%rdi), %rax
+		movq %gs:(%rax), %rax
+		ret
 	kentry:
 		and $-0x10, %rsp
-		lea __boot_info(%rip), %rax
-		mov %rax, boot_info(%rip)
+		movq boot_info@GOTPCREL(%rip), %rcx
+		movq %rdi, (%rcx)
 
 		mov $0xC0000101, %ecx
 		xor %edx, %edx

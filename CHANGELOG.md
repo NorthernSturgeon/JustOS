@@ -3,6 +3,9 @@
 ### Current stable version: [v0.0.6](#v006--2026-07-31)
 
 ## [Unversioned] / EST: N/A
+### Major
+- **Modules!**
+### Minor
 - Optimization of ***strlen***
 - Implementation of ***aligned_malloc***
 - Implementaion of ***realloc***
@@ -14,15 +17,18 @@
 ## [v0.0.7] / EST: 2026-11-01
 ### Common
 - [x] License!
-- [ ] Fast heap verification
+- [x] Fast heap verification
 - [ ] Documentation
 - [x] Logo rendering
 - [x] Deployment on removable media
+- [x] Fixed UB in dynamic linker
+- [x] Stock TLS mechanism
 ### API
 - [x] Renaming: *`libc.so`* -> *`xlibc.so`*
 - [x] Changed return type for *rwlock_\*_crit* from `uint8_t` to `bool`
+- [x] Macro *rgb(r,g,b)* for color @ *`video.h`*
 
-## [v0.0.7-alpha.1] / 2026-10-23
+## [v0.0.7-alpha.1]() / 2026-10-23
 - Prototype of fast heap for small data
 - Basic interrupt handling
 - Implemented ***strlen***

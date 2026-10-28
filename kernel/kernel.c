@@ -9,7 +9,7 @@
 
 extern void asm_hlt(void);
 
-uint64_t __tls test_thread_data = 0x0102030405060708ull;
+__tls uint64_t test_thread_data = 0x0102030405060708ull;
 
 struct __packed BmpHeader{
 	uint16_t magic;
@@ -52,6 +52,61 @@ void render_logo(struct BmpHeader *logo_hdr){
 	}
 	
 	printf("Rendered!\n");
+}
+
+void arena_test2(){
+	set_column_width(70);
+	void **ptrs = malloc(200*sizeof(void*));
+	for (size_t iter = 0; iter < 4; iter++) {
+		set_color(rgb(iter*80, 255, 255), COLOR_BLACK);
+		for (size_t i = 0; i < 200; i++){ 
+			printf("%u ", i);
+			ptrs[i] = malloc((i * 371 + 13) % 65534);
+		}
+
+		for (size_t i = 0; i < 200; i++){
+			// printf("-%u ", i);
+			free(ptrs[i]);
+		}
+		printf("..................................\n");
+	}
+}
+
+void arena_test_destroy() {
+	void **ptrs = malloc(505 * sizeof(void*));
+	for (size_t i = 0; i < 505; i++) 
+		ptrs[i] = malloc(9600);
+	for (size_t i = 0; i < 505; i++) 
+		free(ptrs[i]);
+	void *trigger = malloc(65530);
+	free(trigger);
+}
+
+void arena_test(){
+	void* list[30] = {0};
+
+	printf("Malloc test\n");
+	size_t *data = malloc(32);
+
+	printf("%p %u\n", data, *(data - 1));
+	free(data);
+
+	set_color(rgb(255, 128, 128), COLOR_BLACK);
+	data = malloc(64000);
+	free(data);
+
+	set_color(rgb(225, 255, 0), COLOR_BLACK);
+	for (size_t i = 0; i < 30; i++){
+		list[i] = malloc(64000);
+	}
+
+	set_color(rgb(128, 255, 141), COLOR_BLACK);
+	for (size_t i = 0; i < 20; i++) free(list[i]);
+
+	set_color(rgb(127, 198, 255), COLOR_BLACK);
+	for (size_t i = 0; i < 20; i++){
+		list[i] = malloc(64000);
+	}
 }
 
 void kmain(){
@@ -127,27 +182,23 @@ void kmain(){
 
 	asm volatile ("lidt %0 \n\t" :: "m"(idtr) : "memory");
 	printf("IDT loaded! \n");
-
 	enable_irq();
 	printf("Interrupts! \n");
-
 	asm volatile ("int $255 \n\t" ::: "memory");
 
 	uint64_t gsbase;
 	rdmsr(IA32_GS_BASE, gsbase);
 	printf("GS_BASE: %p\n", gsbase);
-
-	printf("DTV BASE: %p\n", _DTV_);
-
-	printf("TLS TEST: %p\n", *tls_ptr(test_thread_data));
+	printf("TLS TEST: %p\n", test_thread_data);
 
 	printf("Splash %p / %u b\n", boot_info->splash, boot_info->splash_size);
-
 	struct BmpHeader *logo = boot_info->splash;
-
 	printf("offset %u width %u height %u bits %u\n", (uint64_t)logo->bfoffbits, (uint64_t)logo->biwidth, (uint64_t)logo->biheight, (uint64_t)logo->bibitcount);
-
 	render_logo(logo);
+
+	// --- FAST HEAP TEST ---
+	clear_console();
+	arena_test_destroy();
 
 	//for(;;);
 	asm_hlt();

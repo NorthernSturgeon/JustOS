@@ -4,7 +4,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+/*
 __export void* __attribute__((weak)) _DTV_;
 extern void* _percpu_start_;
 
@@ -19,9 +19,9 @@ static inline void* tls_ref(size_t off){
 	return ptr + off - (size_t)&_percpu_start_;
 }
 
-#define tls_ptr(var) ((__typeof__(var)*)tls_ref((size_t)&(var)))
-
-#define __tls __attribute__((section(".percpu")))
+#define tls_ptr(var) (&(var))
+*/
+#define __tls __thread __attribute__((tls_model("local-dynamic")))
 
 #define preempt_disable() OPT_BARRIER()
 #define preempt_enable() OPT_BARRIER()

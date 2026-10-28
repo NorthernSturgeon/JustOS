@@ -35,6 +35,18 @@ Elf64_Shdr *get_section_by_name(Elf64_Ehdr* image, const char* name){
 	return NULL;
 }
 
+Elf64_Phdr *get_segment_by_type(Elf64_Ehdr* image, Elf64_Word type){
+	Elf64_Phdr *phdrs = (void*)image + image->e_phoff;
+
+	for (size_t i = 0; i < image->e_phnum; i++){
+		if (phdrs[i].p_type == type){
+			return &phdrs[i];
+		};
+	}
+
+	return NULL;
+}
+
 Elf64_Dyn* get_dyn(Elf64_Ehdr* image){
 	Elf64_Phdr *phdrs = (void*)image + image->e_phoff;
 

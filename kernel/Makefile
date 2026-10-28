@@ -12,13 +12,14 @@ CFLAGS := -c -I include -nostdlib -ffreestanding -fPIC \
 	-Wall -Wextra -Werror -fno-plt -ftree-vectorize \
 	-fno-asynchronous-unwind-tables -include lib/types.h \
 	-march=x86-64 -std=c17 -fno-tree-vrp -mstackrealign \
-	-O2 -mcmodel=medium -mno-red-zone -fno-semantic-interposition
+	-O2 -mcmodel=medium -mno-red-zone -fno-semantic-interposition \
+	-ftls-model=local-dynamic -DLOG_DEBUG
 
 KERNEL_CFLAGS := $(CFLAGS) -fvisibility=hidden
 
 LIBC_CFLAGS := $(CFLAGS) -Wno-address-of-packed-member
 
-KERNEL_LDFLAGS := -nostdlib -z relro -z now --warn-unresolved-symbols -h '\JUSTOS\kernel.elf' -I JUSTOS/bootx64.efi -pic --export-dynamic -T script.lds
+KERNEL_LDFLAGS := -nostdlib -z relro -z now --warn-unresolved-symbols -h '\JUSTOS\kernel.elf' -shared --export-dynamic -T script.lds
 
 LIBC_LDFLAGS := -nostdlib -z relro -z now -h '\JUSTOS\xlibc.so' -shared -T xlibc.lds
 
