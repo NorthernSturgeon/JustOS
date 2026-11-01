@@ -1,3 +1,12 @@
+/*
+	Copyright (c) 2026 NorthernSturgeon
+	SPDX-License-Identifier: MPL-2.0
+
+	This Source Code Form is subject to the terms of the Mozilla Public 
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 static const uint32_t crc32tab[256] = {
     0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA,
     0x076DC419, 0x706AF48F, 0xE963A535, 0x9E6495A3,

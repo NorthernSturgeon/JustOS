@@ -1,3 +1,12 @@
+/*
+	Copyright (c) 2026 NorthernSturgeon
+	SPDX-License-Identifier: MPL-2.0
+
+	This Source Code Form is subject to the terms of the Mozilla Public 
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 #include "lib/types.h"
 //#include "lib/memory.h"
 #include <stdarg.h>
@@ -9,7 +18,7 @@ static uint16_t basey = 0;
 static uint16_t x = 0;
 static uint16_t y = 0;
 
-static uint8_t scrool_flag = FALSE;
+static uint8_t scrool_flag = false;
 
 static uint32_t forecolor;
 static uint32_t backcolor;
@@ -23,13 +32,13 @@ void printf(char *str, ...){
 	uint16_t w = (get_res()>>16)-1;
 	uint16_t h = (get_res()&0xFFFF)-1;
 	uint64_t u_buffer;
-	unsigned char p_buffer[8] = {0}; // :) char is signed (linux)
+	unsigned char p_buffer[8] = {0}; // ;)
 	va_list data;
 	va_start(data, str);
 	for (;*str;str++){
 		if (x >= w-font_width) {x = basex; y += font_full_height; continue;}
 		if (y >= h-font_height) {y = basey; basex += 40*font_full_width;}
-		if (basex >= w-font_width) {basey = 0; scrool_flag = TRUE;}
+		if (basex >= w-font_width) {basey = 0; scrool_flag = true;}
 		if (*str == '\n') {y += font_full_height; continue;}
 		if (*str == '\r') {x = basex; continue;}
 		if (*str == '%') {
@@ -87,7 +96,7 @@ void print(char *str){
 	uint16_t h = (get_res()&0xFFFF)-1;
 	for (uint32_t i = 0;str[i];i++){
 		if (x >= w-font_width) {x = 0; y += font_full_height; continue;}
-		if (y >= h-font_height) {y = 0; scrool_flag = TRUE;}
+		if (y >= h-font_height) {y = 0; scrool_flag = true;}
 		if (str[i] == '\n') {y += font_full_height; continue;}
 		if (str[i] == '\r') {x = 0; continue;}
 		fill_rect(backcolor,x,y,font_full_width,font_full_height);

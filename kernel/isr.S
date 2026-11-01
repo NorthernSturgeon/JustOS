@@ -1,10 +1,19 @@
+/*
+	Copyright (c) 2026 NorthernSturgeon
+	SPDX-License-Identifier: MPL-2.0
+
+	This Source Code Form is subject to the terms of the Mozilla Public 
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 /**
- *	isr.S - 2nd stage of universal interrupt handler
- * 	targets:
- *		1) save context, extract vector number and transfer control to high-level handler
- * 		2) restore context and stack, return control to interrupted code
- *
- * The code is thoroughly commented, so I have nothing to add here...
+	isr.S - 2nd stage of universal interrupt handler
+	targets:
+	1) save context, extract vector number and transfer control to high-level handler
+	2) restore context and stack, return control to interrupted code
+
+	The code is thoroughly commented, so I have nothing to add here...
  */
 .globl isr_common_stub
 .hidden isr_common_stub

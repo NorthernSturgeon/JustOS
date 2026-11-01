@@ -1,8 +1,18 @@
+/*
+	Copyright (c) 2026 NorthernSturgeon
+	SPDX-License-Identifier: MPL-2.0
+
+	This Source Code Form is subject to the terms of the Mozilla Public 
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 .global start_kernel
 
 .text
 	start_kernel:
 		mov %rcx, %cr3 # bye, efi paging
+
 		# enable SSE support
 		mov %cr0, %rax
 
@@ -36,18 +46,6 @@
 		popfw
 
 		# fill GDT
-#		subq $40, %rsp
-#		movq $0, (%rsp)
-#		movq $0x00A09A000000FFFF, 8(%rsp)
-#		movb $0, 12(%rsp)
-#		movb $0x9A, 13(%rsp)
-#		movb $0xA0, 14(%rsp)
-#		movb $0, 15(%rsp)
-#		movl $0x00A09A00, 12(%rsp)
-#		movq $0x00C092000000FFFF, 16(%rsp)
-#		movq $0x00A0FA000000FFFF, 24(%rsp)
-#		movq $0x00C0F2000000FFFF, 32(%rsp)
-
 		movabs $0x00C0F2000000FFFF, %rax
 		pushq %rax
 		movabs $0x00A0FA000000FFFF, %rax
@@ -58,12 +56,14 @@
 		pushq %rax
 		xor %rax, %rax
 		pushq %rax
+
 		# setup GDT
 		mov %rsp, %rax
 		pushq %rax
 		pushw $40
 		mov %rsp, %rax
 		lgdt (%rax)
+
 		# reload GDT
 		movw $0x10, %ax
 		movw %ax, %ds
@@ -72,6 +72,7 @@
 		xorw %ax, %ax
 		movw %ax, %fs
 		movw %ax, %gs
+
 		pushq $8
 		pushq %rsi
 		lretq 

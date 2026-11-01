@@ -1,5 +1,18 @@
+/*
+	Copyright (c) 2026 NorthernSturgeon
+	SPDX-License-Identifier: MPL-2.0
+
+	This Source Code Form is subject to the terms of the Mozilla Public 
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 #ifndef __BL_ELF_H__
 #define __BL_ELF_H__
+
+/**
+ * \file elf.h
+ */
 
 #define EI_MAG 0x464c457f //little-endian
 

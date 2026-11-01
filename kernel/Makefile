@@ -1,3 +1,12 @@
+#
+#	Copyright (c) 2026 NorthernSturgeon
+#	SPDX-License-Identifier: MPL-2.0
+#
+#	This Source Code Form is subject to the terms of the Mozilla Public 
+#	License, v. 2.0. If a copy of the MPL was not distributed with this
+#	file, You can obtain one at https://mozilla.org/MPL/2.0/.
+#
+
 include ../local.env
 
 LIBC_SOURCES := lib/mem.S lib/atomic.S lib/memory.c \
@@ -21,7 +30,7 @@ LIBC_CFLAGS := $(CFLAGS) -Wno-address-of-packed-member
 
 KERNEL_LDFLAGS := -nostdlib -z relro -z now --warn-unresolved-symbols -h '\JUSTOS\kernel.elf' -shared --export-dynamic -T script.lds
 
-LIBC_LDFLAGS := -nostdlib -z relro -z now -h '\JUSTOS\xlibc.so' -shared -T xlibc.lds
+LIBC_LDFLAGS := -nostdlib -z relro -z now -h '\JUSTOS\klibc.so' -shared -T xlibc.lds
 
 OUT_DIR := out
 
@@ -56,18 +65,18 @@ clear:
 
 lib: $(LIBC_OBJS)
 	@echo $(LIBC_OBJS)
-	@ld $(LIBC_OBJS) $(LIBC_LDFLAGS) -o $(OUT_DIR)/xlibc.so
-	@echo xlibc.so compiled successfully!
+	@ld $(LIBC_OBJS) $(LIBC_LDFLAGS) -o $(OUT_DIR)/klibc.so
+	@echo klibc.so compiled successfully!
 
 kernel: lib $(KERNEL_OBJS)
 	@echo $(KERNEL_OBJS)
-	@ld $(KERNEL_OBJS) $(KERNEL_LDFLAGS) -o $(OUT_DIR)/kernel.elf $(OUT_DIR)/xlibc.so
+	@ld $(KERNEL_OBJS) $(KERNEL_LDFLAGS) -o $(OUT_DIR)/kernel.elf $(OUT_DIR)/klibc.so
 	@echo kernel.elf compiled successfully!
 
 vhdinstall:
 	losetup --partscan /dev/loop0 ${VHDINSTALLPATH}
 	mount /dev/loop0p1 /mnt
 	cp $(OUT_DIR)/kernel.elf /mnt/JUSTOS
-	cp $(OUT_DIR)/xlibc.so /mnt/JUSTOS
+	cp $(OUT_DIR)/klibc.so /mnt/JUSTOS
 	umount /dev/loop0p1
 	losetup -d /dev/loop0

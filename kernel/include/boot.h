@@ -1,8 +1,16 @@
+/*
+ *	Copyright (c) 2026 NorthernSturgeon
+ *	SPDX-License-Identifier: MPL-2.0
+ *
+ *	This Source Code Form is subject to the terms of the Mozilla Public 
+ *	License, v. 2.0. If a copy of the MPL was not distributed with this
+ *	file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 #ifndef __BOOTINFO_H__
 #define __BOOTINFO_H__
 
 #include "physmem.h"
-#include "rtsvcs.h"
 
 typedef struct __packed{
 	char* name;
@@ -13,7 +21,7 @@ typedef struct __packed{
 } loaded_file;
 
 typedef struct __packed{
-	rtsvcs_t *rtsvcs; // 0
+	void *rtsvcs; // 0
 	void *acpi_rdsp; // 1
 	void *stack; // 2
 	uint64_t stack_size; // 3
