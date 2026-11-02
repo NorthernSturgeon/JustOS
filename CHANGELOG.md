@@ -15,7 +15,7 @@
 
 ## [v0.0.7] / NET: N/A
 - More documentation
-## [v0.0.7-rc1] / 2026-11-02
+## [v0.0.7-rc1](https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.7-rc1) / 2026-11-02
 ### Common
 - License!
 - Fast heap verification
