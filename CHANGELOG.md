@@ -3,9 +3,6 @@
 ### Current stable version: [v0.0.6](#v006)
 
 ## [Unversioned] / NET: N/A
-### Major
-- **Modules!**
-### Minor
 - Optimization of ***strlen***
 - Implementation of ***aligned_malloc***
 - Implementaion of ***realloc***
@@ -14,19 +11,24 @@
 - Correct processing of weak bindings
 - New place for the *boot_info*
 
-## [v0.0.7] / NET: 2026-11-01
+***
+
+## [v0.0.7] / NET: N/A
+- More documentation
+## [v0.0.7-rc1] / 2026-11-02
 ### Common
-- [x] License!
-- [x] Fast heap verification
-- [ ] Documentation
-- [x] Logo rendering
-- [x] Deployment on removable media
-- [x] Fixed UB in dynamic linker
-- [x] Stock TLS mechanism
+- License!
+- Fast heap verification
+- Basic documentation
+- Logo rendering
+- Deployment on removable media
+- Fixed UB in dynamic linker
+- Stock TLS mechanism
+- Fixed unalignment access and strict-aliasing issues
 ### API
-- [x] Renaming: *`libc.so`* -> *`klibc.so`*
-- [x] Changed return type for *rwlock_\*_crit* from `uint8_t` to `bool`
-- [x] Macro *rgb(r,g,b)* for color @ *`video.h`*
+- Renaming: *`libc.so`* -> *`klibc.so`*
+- Changed return type for *rwlock_\*_crit* from `uint8_t` to `bool`
+- Macro *rgb(r,g,b)* for color @ *`video.h`*
 
 ## [v0.0.7-alpha.1](https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.7-alpha.1) / 2026-10-23
 - Prototype of fast heap for small data
@@ -36,6 +38,8 @@
 - Refactored ***printf***
 - Fixed incorrect implementation of ***memmove***
 - Using *<stdbool.h>* instead of defining `bool` manually
+
+***
 
 ## [v0.0.6](https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.6) / 2026-07-31 {#v006}
 - Beautiful CHANGELOG
@@ -48,6 +52,8 @@
 - TLS support prototype
 - Now all loaded libraries will reserve memory
 
+***
+
 ## [v0.0.5](https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.5) / 2026-07-29
 - Dynamic linking!
 - Fixed incorrect implementation of min-heap for page allocator
@@ -58,6 +64,8 @@
 - Dynamic linker works in VM
 - Enabled SSE/SSE2 instructions
 - Video framebuffer is no longer declared as `volatile`
+
+***
 
 ## [v0.0.4](https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.4) / 2026-06-02
 - Improved building
@@ -70,9 +78,13 @@
 - Enforced C17 standard
 - Bugfixes...
 
+***
+
 ## [v0.0.2](https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.2) / 2025-07-17
 - Implemented ***printf***
 - Bugfixes...
+
+***
 
 ## [v0.0.1](https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.1) / 2025-07-12
 - Initial...

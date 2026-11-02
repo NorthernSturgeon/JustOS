@@ -63,61 +63,6 @@ void render_logo(struct BmpHeader *logo_hdr){
 	printf("Rendered!\n");
 }
 
-void arena_test2(){
-	set_column_width(70);
-	void **ptrs = malloc(200*sizeof(void*));
-	for (size_t iter = 0; iter < 4; iter++) {
-		set_color(rgb(iter*80, 255, 255), COLOR_BLACK);
-		for (size_t i = 0; i < 200; i++){ 
-			printf("%u ", i);
-			ptrs[i] = malloc((i * 371 + 13) % 65534);
-		}
-
-		for (size_t i = 0; i < 200; i++){
-			// printf("-%u ", i);
-			free(ptrs[i]);
-		}
-		printf("..................................\n");
-	}
-}
-
-void arena_test_destroy() {
-	void **ptrs = malloc(505 * sizeof(void*));
-	for (size_t i = 0; i < 505; i++) 
-		ptrs[i] = malloc(9600);
-	for (size_t i = 0; i < 505; i++) 
-		free(ptrs[i]);
-	void *trigger = malloc(65530);
-	free(trigger);
-}
-
-void arena_test(){
-	void* list[30] = {0};
-
-	printf("Malloc test\n");
-	size_t *data = malloc(32);
-
-	printf("%p %u\n", data, *(data - 1));
-	free(data);
-
-	set_color(rgb(255, 128, 128), COLOR_BLACK);
-	data = malloc(64000);
-	free(data);
-
-	set_color(rgb(225, 255, 0), COLOR_BLACK);
-	for (size_t i = 0; i < 30; i++){
-		list[i] = malloc(64000);
-	}
-
-	set_color(rgb(128, 255, 141), COLOR_BLACK);
-	for (size_t i = 0; i < 20; i++) free(list[i]);
-
-	set_color(rgb(127, 198, 255), COLOR_BLACK);
-	for (size_t i = 0; i < 20; i++){
-		list[i] = malloc(64000);
-	}
-}
-
 void kmain(){
 	init_video(boot_info->vram, boot_info->width, boot_info->height, boot_info->ppl, boot_info->format);
 	fill_rect(0, 0, 0, boot_info->width-1, boot_info->height-1);
@@ -204,10 +149,6 @@ void kmain(){
 	struct BmpHeader *logo = boot_info->splash;
 	printf("offset %u width %u height %u bits %u\n", (uint64_t)logo->bfoffbits, (uint64_t)logo->biwidth, (uint64_t)logo->biheight, (uint64_t)logo->bibitcount);
 	render_logo(logo);
-
-	// --- FAST HEAP TEST ---
-	clear_console();
-	arena_test_destroy();
 
 	//for(;;);
 	asm_hlt();

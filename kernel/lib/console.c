@@ -113,10 +113,7 @@ void printf(const char *str, ...){
 				return;
 			case 'p':
 				uint64_t tmp = va_arg(data, uint64_t);
-				*((uint64_t*)&p_buffer) = tmp;
-				tmp &= UINT32_MAX;
-				tmp >>= 13;
-				set_color(((tmp*3741)&0x00ffffff), 0);
+				__builtin_memcpy(p_buffer, &tmp, 8);
 				for (uint8_t i = 0; i < 8; i++){
 					out_buffer[15-2*i] = (p_buffer[i]&15)+0x30;
 					if (out_buffer[15-2*i] >= 0x3A) out_buffer[15-2*i] += 7;

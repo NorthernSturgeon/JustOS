@@ -47,7 +47,7 @@ extern size_t e820_len;
 
 //global occupied region list
 typedef struct{
-	uint64_t *list; //atomic
+	uint64_t *list;
 	uint64_t lenght;
 	uint64_t rwlock;
 } gorl_t;

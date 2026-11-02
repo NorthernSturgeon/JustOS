@@ -15,7 +15,7 @@ OBJECTS := $(C_SOURCES:.c=.c.o) $(ASM_SOURCES:.S=.S.o)
 OUT_DIR := out
 
 CFLAGS := -c -I /usr/local/include/efi \
-	-ffreestanding -mabi=sysv -Os \
+	-ffreestanding -mabi=sysv -Os -fno-strict-aliasing \
 	-I /usr/local/include/efi/x86_64 \
 	-I /usr/local/include/efi/protocol \
 	-fno-stack-protector -fshort-wchar \

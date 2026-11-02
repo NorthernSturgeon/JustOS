@@ -1,4 +1,4 @@
 kernel	\JUSTOS\kernel.elf
-video	4096	3072
+video	1600	900
 stack	32768
 splash	\JUSTOS\testicon.bmp

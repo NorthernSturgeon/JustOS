@@ -10,8 +10,6 @@
 #ifndef __FONT_H__
 #define __FONT_H__
 
-typedef unsigned char uint8_t;
-
 extern uint8_t* font_symbol_tab[];
 extern const size_t font_symbol_tab_size;
 

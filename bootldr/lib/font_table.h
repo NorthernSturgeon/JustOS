@@ -12,9 +12,6 @@
 
 #include "font.h"
 
-typedef unsigned char uint8_t;
-typedef unsigned long long size_t;
-
 static uint8_t zero[13] = {
 0b00111000,
 0b01000100,

@@ -17,7 +17,7 @@ KERNEL_SOURCES := header.S kernel.c isr.S video.c \
 				physmem.c isr_id.S interrupts.c
 
 CFLAGS := -c -I include -nostdlib -ffreestanding -fPIC \
-	-fomit-frame-pointer -fno-stack-protector \
+	-fomit-frame-pointer -fno-stack-protector -fno-strict-aliasing \
 	-Wall -Wextra -Werror -fno-plt -ftree-vectorize \
 	-fno-asynchronous-unwind-tables -include lib/types.h \
 	-march=x86-64 -std=c17 -fno-tree-vrp -mstackrealign \
