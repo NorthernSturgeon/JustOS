@@ -1,6 +1,6 @@
 # THE CHANGELOG (and prospect)
     of the JUSTOS
-### Current stable version: [v0.0.6](#v006)
+### Current stable version: [v0.0.7-rc1](#v007rc1)
 
 ## [Unversioned] / NET: N/A
 - Optimization of ***strlen***
@@ -15,7 +15,7 @@
 
 ## [v0.0.7] / NET: N/A
 - More documentation
-## [v0.0.7-rc1](https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.7-rc1) / 2026-11-02
+## <a href="https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.7-rc1">v0.0.7-rc1</a> / 2026-11-02 {#v007rc1}
 ### Common
 - License!
 - Fast heap verification
@@ -30,7 +30,7 @@
 - Changed return type for *rwlock_\*_crit* from `uint8_t` to `bool`
 - Macro *rgb(r,g,b)* for color @ *`video.h`*
 
-## [v0.0.7-alpha.1](https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.7-alpha.1) / 2026-10-23
+## <a href="https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.7-alpha.1">v0.0.7-alpha.1</a> / 2026-10-23
 - Prototype of fast heap for small data
 - Basic interrupt handling
 - Implemented ***strlen***
@@ -41,25 +41,25 @@
 
 ***
 
-## [v0.0.6](https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.6) / 2026-07-31 {#v006}
+## <a href="https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.6">v0.0.6</a> / 2026-07-31
 - Beautiful CHANGELOG
 - TLS correct support
 - Using standard header files for integer types
 - *`physmem.c`* is now a part of kernel, not libc
 - Cosmetic changes...
 
-## [v0.0.6-alpha](https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.6-alpha) / 2026-07-30
+## <a href="https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.6-alpha">v0.0.6-alpha</a> / 2026-07-30
 - TLS support prototype
 - Now all loaded libraries will reserve memory
 
 ***
 
-## [v0.0.5](https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.5) / 2026-07-29
+## <a href="https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.5">v0.0.5</a> / 2026-07-29
 - Dynamic linking!
 - Fixed incorrect implementation of min-heap for page allocator
 - Optimizations and bugfixes...
 
-## [v0.0.5-alpha](https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.5-alpha) / 2026-07-28
+## <a href="https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.5-alpha">v0.0.5-alpha</a> / 2026-07-28
 - Size of stack is now configurable in BCF
 - Dynamic linker works in VM
 - Enabled SSE/SSE2 instructions
@@ -67,11 +67,13 @@
 
 ***
 
-## [v0.0.4](https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.4) / 2026-06-02
+## <a href="https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.4">v0.0.4</a> / 2026-06-02
 - Improved building
 - Preparations for dynamic linking support
 
-## [v0.0.3](https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.3) / 2026-05-23
+***
+
+## <a href="https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.3">v0.0.3</a> / 2026-05-23
 - Developed memory manager
 - Introduced bootloader configuration file in TSV format
 - Separated kernel and it's stack
@@ -80,11 +82,11 @@
 
 ***
 
-## [v0.0.2](https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.2) / 2025-07-17
+## <a href="https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.2">v0.0.2</a> / 2025-07-17
 - Implemented ***printf***
 - Bugfixes...
 
 ***
 
-## [v0.0.1](https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.1) / 2025-07-12
+## <a href="https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.1">v0.0.1</a> / 2025-07-12
 - Initial...
