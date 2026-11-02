@@ -1,3 +1,12 @@
+#
+#	Copyright (c) 2026 NorthernSturgeon
+#	SPDX-License-Identifier: MPL-2.0
+#
+#	This Source Code Form is subject to the terms of the Mozilla Public 
+#	License, v. 2.0. If a copy of the MPL was not distributed with this
+#	file, You can obtain one at https://mozilla.org/MPL/2.0/.
+#
+
 include ../local.env
 
 C_SOURCES := video.c console.c font.c xxhash64.c hashtab.c elf.c dynlink.c tsv.c bootloader.c
@@ -6,7 +15,7 @@ OBJECTS := $(C_SOURCES:.c=.c.o) $(ASM_SOURCES:.S=.S.o)
 OUT_DIR := out
 
 CFLAGS := -c -I /usr/local/include/efi \
-	-ffreestanding -mabi=sysv -Os \
+	-ffreestanding -mabi=sysv -Os -fno-strict-aliasing \
 	-I /usr/local/include/efi/x86_64 \
 	-I /usr/local/include/efi/protocol \
 	-fno-stack-protector -fshort-wchar \
@@ -34,6 +43,7 @@ vhdinstall:
 	mount /dev/loop0p1 /mnt
 	cp $(OUT_DIR)/bootx64.efi /mnt/EFI/Boot
 	cp justboot.tsv /mnt/JUSTOS
+	cp ../assets/testicon.bmp /mnt/JUSTOS
 	umount /dev/loop0p1
 	losetup -d /dev/loop0
 

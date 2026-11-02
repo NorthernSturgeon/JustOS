@@ -1,5 +1,18 @@
+/*
+	Copyright (c) 2026 NorthernSturgeon
+	SPDX-License-Identifier: MPL-2.0
+
+	This Source Code Form is subject to the terms of the Mozilla Public 
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 #ifndef __E820_H__
 #define __E820_H__
+
+/**
+ * \file e820.h
+ */
 
 typedef struct __attribute__((__packed__)){
 	UINT64 base;

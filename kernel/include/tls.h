@@ -1,10 +1,19 @@
+/*
+	Copyright (c) 2026 NorthernSturgeon
+	SPDX-License-Identifier: MPL-2.0
+
+	This Source Code Form is subject to the terms of the Mozilla Public 
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 #ifndef __TLS_H__
 #define __TLS_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+/*
 __export void* __attribute__((weak)) _DTV_;
 extern void* _percpu_start_;
 
@@ -19,9 +28,9 @@ static inline void* tls_ref(size_t off){
 	return ptr + off - (size_t)&_percpu_start_;
 }
 
-#define tls_ptr(var) ((__typeof__(var)*)tls_ref((size_t)&var))
-
-#define __tls __attribute__((section(".percpu")))
+#define tls_ptr(var) (&(var))
+*/
+#define __tls __thread __attribute__((tls_model("local-dynamic")))
 
 #define preempt_disable() OPT_BARRIER()
 #define preempt_enable() OPT_BARRIER()

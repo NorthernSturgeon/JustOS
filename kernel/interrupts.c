@@ -1,5 +1,15 @@
+/*
+	Copyright (c) 2026 NorthernSturgeon
+	SPDX-License-Identifier: MPL-2.0
+
+	This Source Code Form is subject to the terms of the Mozilla Public 
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 #include "interrupts.h"
 #include "lib/console.h"
+#include "register.h"
 
 idtr_t idtr __attribute__((aligned(16)));
 
@@ -8,9 +18,14 @@ static uint16_t repeat = 0;
 //                            #DF           #TS #NP #SS #GP #PF            #AC             #CP             #VC             #SX
 #define HAS_CODE(intv) ((intv == 8) || (intv >= 10 && intv <= 14) || (intv == 17) || (intv == 21) || (intv == 29) || (intv == 30))
 
-uint8_t isr_common(uint8_t intn, uint64_t* stack){
+bool isr_common(uint8_t intn, uint64_t* stack){
 	printf("%u %p %p %p %p %p %p\n", (uint64_t)intn, *(stack), *(stack+1), *(stack+2), *(stack+3), *(stack+4), *(stack+5));
-	if (intn == repeat || intn == 8){
+	if (intn == 14){
+		uint64_t cr2;
+		read_rega(cr2, cr2);
+		printf("PAGE FAULT CR2=%p ERRCODE=%p\n", cr2, *(stack));
+		for (;;);
+	} else if (intn == repeat || intn == 8){
 		for (;;);
 	}
 	else if (intn < 32){

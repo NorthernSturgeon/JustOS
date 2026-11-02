@@ -1,5 +1,18 @@
+/*
+	Copyright (c) 2026 NorthernSturgeon
+	SPDX-License-Identifier: MPL-2.0
+
+	This Source Code Form is subject to the terms of the Mozilla Public 
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 #include <efi/efi.h>
 #include <efi/efilib.h>
+
+/**
+ * \file elf.c
+ */
 
 #include "elf.h"
 
@@ -29,6 +42,18 @@ Elf64_Shdr *get_section_by_name(Elf64_Ehdr* image, const char* name){
 	for (size_t i = 0; i < image->e_shnum; i++){
 		if (!strcmpa(&shstrtab[shdrs[i].sh_name], name)){
 			return &shdrs[i];
+		};
+	}
+
+	return NULL;
+}
+
+Elf64_Phdr *get_segment_by_type(Elf64_Ehdr* image, Elf64_Word type){
+	Elf64_Phdr *phdrs = (void*)image + image->e_phoff;
+
+	for (size_t i = 0; i < image->e_phnum; i++){
+		if (phdrs[i].p_type == type){
+			return &phdrs[i];
 		};
 	}
 

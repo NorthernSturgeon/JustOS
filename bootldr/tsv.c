@@ -1,11 +1,24 @@
+/*
+	Copyright (c) 2026 NorthernSturgeon
+	SPDX-License-Identifier: MPL-2.0
+
+	This Source Code Form is subject to the terms of the Mozilla Public 
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 #include <efi/efi.h>
 #include <efi/efilib.h>
+
+/**
+ * @file tsv.c
+ */
 
 /*
 TODO: documentation
 */
 CHAR8* tsv_init(CHAR8* file, UINTN filesz){
-	UINTN delta = 1;
+	UINTN delta = 2;
 	//Stage 1: calculation (optimized loop)
 	for (UINTN i = 0; i < filesz; i++){
 		if (file[i] == '\t') file[i] = '\0';
@@ -42,6 +55,7 @@ CHAR8* tsv_search(CHAR8* base, char* key, UINTN idx){
 		//EOF: \n\r
 		if (*(++base) == '\r') return NULL;
 	}
+
 	//search column
 	UINTN ctr = 0;
 	while (ctr < idx){
@@ -56,6 +70,7 @@ UINTN tsv_listlen(CHAR8* base){
 		Print(L"tsv_listlen: base=NULL!!!\n");
 		for(;;);
 	}
+
 	UINTN ret = 0;
 	for (; *base != '\n'; base++){
 		if (*base == '\0') ret++;
@@ -65,9 +80,10 @@ UINTN tsv_listlen(CHAR8* base){
 
 CHAR8* tsv_next(CHAR8* base){
 	if (!base){
-		Print(L"tsv_listlen: base=NULL!!!\n");
+		Print(L"tsv_next: base=NULL!!!\n");
 		for(;;);
 	}
+
 	for (; *base != '\0'; base++){
 		if (*base == '\n') return NULL;
 	}
@@ -80,8 +96,10 @@ INTN tsv_parseint(CHAR8* base){
 		for(;;);
 	}
 	INTN ret = 0;
+
 	while (*base) base++;
 	base--;
+
 	UINTN factor = 1;
 	while (*base != '\0' && *base != '-'){
 		ret += (*base - 0x30)*factor;
@@ -92,12 +110,14 @@ INTN tsv_parseint(CHAR8* base){
 	return ret;
 }
 
+/**
+ Convert ASCII to UTF16LE
+*/
 CHAR16* makechar16(CHAR8* base){
 	if (!base) return NULL;
 	UINTN len = 1 + strlena(base);
 	CHAR16* pool = AllocatePool(len*2);
 	if (pool) {
-		pool[len] = 0;
 		for (UINTN idx = 0; idx < len; idx++) pool[idx] = base[idx];
 	}
 	return pool;

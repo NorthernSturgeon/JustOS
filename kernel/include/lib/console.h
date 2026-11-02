@@ -1,3 +1,12 @@
+/*
+	Copyright (c) 2026 NorthernSturgeon
+	SPDX-License-Identifier: MPL-2.0
+
+	This Source Code Form is subject to the terms of the Mozilla Public 
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 #ifndef __CONSOLE_H__
 #define __CONSOLE_H__
 
@@ -54,6 +63,8 @@ struct console_info{
 extern struct console_info get_console_info(void);
 extern void set_color(uint32_t fc, uint32_t bc);
 extern void printf(const char *str, ...);
+extern void clear_console(void);
+extern void set_column_width(uint8_t cw);
 
 #ifdef __cplusplus
 }

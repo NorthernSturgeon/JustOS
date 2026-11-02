@@ -1,3 +1,12 @@
+/*
+	Copyright (c) 2026 NorthernSturgeon
+	SPDX-License-Identifier: MPL-2.0
+
+	This Source Code Form is subject to the terms of the Mozilla Public 
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 #include "lib/font.h"
 #include "video.h"
 
@@ -11,9 +20,6 @@ typedef enum {
 
 static uint32_t *vram = NULL;
 static uint16_t width, height, format, scanline;
-
-#define WHERE uint32_t where = width*y+x
-//#define SET_PIXEL(dest,pos,r,g,b) dest[pos] = r; dest[pos+1] = g; dest[pos+2] = b
 
 static void color_correct(uint32_t *color){
 	if (format != PixelBlueGreenRedReserved8BitPerColor) return;
@@ -61,6 +67,4 @@ void __export draw_by_font_bitmap(uint8_t bitmap[] ,uint32_t color, uint16_t x, 
 		}
 		where += scanline;
 	}
-	
-	//draw_pixel(color, x+3, y+3);
 }

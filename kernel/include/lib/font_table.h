@@ -1,3 +1,12 @@
+/*
+	Copyright (c) 2026 NorthernSturgeon
+	SPDX-License-Identifier: MPL-2.0
+
+	This Source Code Form is subject to the terms of the Mozilla Public 
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 #ifndef __FONT_TABLE_H__
 #define __FONT_TABLE_H__
 
@@ -965,11 +974,11 @@ static uint8_t undefined[13] = {
 static uint8_t A[13] = {
 0b00010000,
 0b00101000,
+0b00101000,
+0b00101000,
 0b01000100,
-0b10000010,
-0b10000010,
-0b10000010,
-0b11111110,
+0b01000100,
+0b01111100,
 0b10000010,
 0b10000010,
 0b10000010,
@@ -1538,7 +1547,7 @@ static uint8_t tilde[13] = {
 0b00000000,
 };
 
-volatile void* font_symbol_table[] = {
+void* font_symbol_table[] = {
 	&space, &exclamation, &doublequot, &numbersign,
 	&dollar, &percentsign, &ampersand, &quot,
 	&leftparenthesis, &rightparenthesis, &asterisk, &plus,

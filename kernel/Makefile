@@ -1,3 +1,12 @@
+#
+#	Copyright (c) 2026 NorthernSturgeon
+#	SPDX-License-Identifier: MPL-2.0
+#
+#	This Source Code Form is subject to the terms of the Mozilla Public 
+#	License, v. 2.0. If a copy of the MPL was not distributed with this
+#	file, You can obtain one at https://mozilla.org/MPL/2.0/.
+#
+
 include ../local.env
 
 LIBC_SOURCES := lib/mem.S lib/atomic.S lib/memory.c \
@@ -8,19 +17,20 @@ KERNEL_SOURCES := header.S kernel.c isr.S video.c \
 				physmem.c isr_id.S interrupts.c
 
 CFLAGS := -c -I include -nostdlib -ffreestanding -fPIC \
-	-fomit-frame-pointer -fno-stack-protector \
+	-fomit-frame-pointer -fno-stack-protector -fno-strict-aliasing \
 	-Wall -Wextra -Werror -fno-plt -ftree-vectorize \
 	-fno-asynchronous-unwind-tables -include lib/types.h \
 	-march=x86-64 -std=c17 -fno-tree-vrp -mstackrealign \
-	-O2 -mcmodel=medium -mno-red-zone -fno-semantic-interposition
+	-O2 -mcmodel=medium -mno-red-zone -fno-semantic-interposition \
+	-ftls-model=local-dynamic -DLOG_DEBUG
 
 KERNEL_CFLAGS := $(CFLAGS) -fvisibility=hidden
 
 LIBC_CFLAGS := $(CFLAGS) -Wno-address-of-packed-member
 
-KERNEL_LDFLAGS := -nostdlib -z relro -z now --warn-unresolved-symbols -h '\JUSTOS\kernel.elf' -I JUSTOS/bootx64.efi -pic --export-dynamic -T script.lds
+KERNEL_LDFLAGS := -nostdlib -z relro -z now --warn-unresolved-symbols -h '\JUSTOS\kernel.elf' -shared --export-dynamic -T script.lds
 
-LIBC_LDFLAGS := -nostdlib -z relro -z now -h '\JUSTOS\libc.so' -shared -T libc.lds
+LIBC_LDFLAGS := -nostdlib -z relro -z now -h '\JUSTOS\klibc.so' -shared -T xlibc.lds
 
 OUT_DIR := out
 
@@ -55,18 +65,18 @@ clear:
 
 lib: $(LIBC_OBJS)
 	@echo $(LIBC_OBJS)
-	@ld $(LIBC_OBJS) $(LIBC_LDFLAGS) -o $(OUT_DIR)/libc.so
-	@echo libc.so compiled successfully!
+	@ld $(LIBC_OBJS) $(LIBC_LDFLAGS) -o $(OUT_DIR)/klibc.so
+	@echo klibc.so compiled successfully!
 
 kernel: lib $(KERNEL_OBJS)
 	@echo $(KERNEL_OBJS)
-	@ld $(KERNEL_OBJS) $(KERNEL_LDFLAGS) -o $(OUT_DIR)/kernel.elf $(OUT_DIR)/libc.so
+	@ld $(KERNEL_OBJS) $(KERNEL_LDFLAGS) -o $(OUT_DIR)/kernel.elf $(OUT_DIR)/klibc.so
 	@echo kernel.elf compiled successfully!
 
 vhdinstall:
 	losetup --partscan /dev/loop0 ${VHDINSTALLPATH}
 	mount /dev/loop0p1 /mnt
 	cp $(OUT_DIR)/kernel.elf /mnt/JUSTOS
-	cp $(OUT_DIR)/libc.so /mnt/JUSTOS
+	cp $(OUT_DIR)/klibc.so /mnt/JUSTOS
 	umount /dev/loop0p1
 	losetup -d /dev/loop0

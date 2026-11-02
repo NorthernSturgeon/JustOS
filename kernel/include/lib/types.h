@@ -1,3 +1,12 @@
+/*
+	Copyright (c) 2026 NorthernSturgeon
+	SPDX-License-Identifier: MPL-2.0
+
+	This Source Code Form is subject to the terms of the Mozilla Public 
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 #ifndef __TYPES_H__
 #define __TYPES_H__
 
@@ -16,5 +25,22 @@
 #define PAGE_SIZE 4096
 
 #define OPT_BARRIER() asm volatile ("" ::: "memory")
+
+#if defined(LOG_DEBUG)
+
+#define log_debug(...) printf(__VA_ARGS__)
+#define log_warn(...) printf(__VA_ARGS__)
+
+#elif defined(LOG_WARN)
+
+#define log_debug(...)
+#define log_warn(...) printf(__VA_ARGS__)
+
+#else
+
+#define log_debug(...)
+#define log_warn(...)
+
+#endif
 
 #endif

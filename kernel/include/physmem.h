@@ -1,3 +1,12 @@
+/*
+	Copyright (c) 2026 NorthernSturgeon
+	SPDX-License-Identifier: MPL-2.0
+
+	This Source Code Form is subject to the terms of the Mozilla Public 
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 #ifndef __PHYSMEM_H__
 #define __PHYSMEM_H__
 
@@ -38,7 +47,7 @@ extern size_t e820_len;
 
 //global occupied region list
 typedef struct{
-	uint64_t *list; //atomic
+	uint64_t *list;
 	uint64_t lenght;
 	uint64_t rwlock;
 } gorl_t;

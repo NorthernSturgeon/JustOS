@@ -1,3 +1,12 @@
+/*
+	Copyright (c) 2026 NorthernSturgeon
+	SPDX-License-Identifier: MPL-2.0
+
+	This Source Code Form is subject to the terms of the Mozilla Public 
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 #include <alloca.h>
 #include <stdatomic.h>
 
@@ -80,7 +89,7 @@ void mark_free(void* ptr, size_t size){
 	uint64_t start = (uint64_t)ptr;
 	uint64_t end = start+size;
 
-	uint8_t irq_state = rwlock_lock_crit(&gorl.rwlock);
+	bool irq_state = rwlock_lock_crit(&gorl.rwlock);
 	// remove zero-lenght
 	optimize_gorl();
 
@@ -126,7 +135,7 @@ void mark_busy(void* ptr, size_t size){
 	uint64_t start = (uint64_t)ptr;
 	uint64_t end = start+size;
 	size_t si = 0;
-	uint8_t irq_state = rwlock_lock_crit(&gorl.rwlock);
+	bool irq_state = rwlock_lock_crit(&gorl.rwlock);
 	// remove zero-lenght
 	optimize_gorl();
 
@@ -310,6 +319,7 @@ void init_mm(){
 	}
 
 	mark_busy(boot_info->stack, boot_info->stack_size); // kernel stack
+	if (boot_info->splash) mark_busy(boot_info->splash, round_to(boot_info->splash_size, 4096));
 
 	init_malloc(virt_to_phys(gorl.list[gorl.lenght-1]));
 }
