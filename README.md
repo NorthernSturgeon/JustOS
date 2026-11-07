@@ -4,7 +4,7 @@ Operating system for x86-64.
 ### About
 The core principles of JustOS are portability and extensibility. Achieving this, however, requires implementing a variety of alternative engineering tricks and finding optimal solutions under complex conditions...
 
-See the history and follow the development progress in real time in the [changelog](https://github.com/NorthernSturgeon/JustOS/blob/develop/CHANGELOG.md)
+See the history and follow the development progress in real time in the [changelog](https://github.com/NorthernSturgeon/JustOS/blob/develop/CHANGELOG.md)@develop
 
 ### Key feautures
 - UEFI bootloader

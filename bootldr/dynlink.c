@@ -150,7 +150,7 @@ static void resolve(hashtab_t *const ctx, libid_t *lib){
 			case R_X86_64_GLOB_DAT:
 				//Print(L"GLOB_DAT\n");
 				char *symname = &lib->dynstr[lib->dynsym[ELF64_R_SYM(lib->rela[i].r_info)].st_name];
-				if (!strcmpa(symname,"_DTV_") && ELF64_ST_BIND(lib->dynsym[ELF64_R_SYM(lib->rela[i].r_info)].st_info) == STB_WEAK) break;
+				// if (!strcmpa(symname,"_DTV_") && ELF64_ST_BIND(lib->dynsym[ELF64_R_SYM(lib->rela[i].r_info)].st_info) == STB_WEAK) break;
 
 				symbol_t *target = ht_read(ctx, symname);
 				if (!target && ctx != &global_exports) target = ht_read(&global_exports, symname);
