@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['libid_5ft_0',['libid_t',['../structlibid__t.html',1,'']]],
-  ['loaded_5ffile_1',['loaded_file',['../structloaded__file.html',1,'']]]
+  ['ia32_5fefer_5ft_0',['ia32_efer_t',['../unionia32__efer__t.html',1,'']]]
 ];

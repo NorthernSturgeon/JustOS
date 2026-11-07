@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['ia32_5fefer_5ft_0',['ia32_efer_t',['../unionia32__efer__t.html',1,'']]]
+  ['hashtab_5ft_0',['hashtab_t',['../structhashtab__t.html',1,'']]],
+  ['ht_5fentry_5ft_1',['ht_entry_t',['../structht__entry__t.html',1,'']]]
 ];

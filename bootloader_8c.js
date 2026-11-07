@@ -1,7 +1,7 @@
 var bootloader_8c =
 [
-    [ "virt_addr_t", "unionvirt__addr__t.html", null ],
-    [ "page_entry_t", "unionpage__entry__t.html", null ],
+    [ "virt_addr_t", "unionvirt__addr__t.html", "unionvirt__addr__t" ],
+    [ "page_entry_t", "unionpage__entry__t.html", "unionpage__entry__t" ],
     [ "boot_info_t", "structboot__info__t.html", "structboot__info__t" ],
     [ "ALLOC_KPOOL", "bootloader_8c.html#a0e77c5ebe4e579235cc9b87934d8d11d", null ],
     [ "MAX_PHY_ADDR", "bootloader_8c.html#a58159ab0f7e54f3aa97d3acdc1f1aad1", null ],

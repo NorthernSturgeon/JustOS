@@ -1,15 +1,12 @@
 var searchData=
 [
-  ['getmmap_0',['GetMMap',['../bootloader_8c.html#a88d5c02552551d903b29bc6e3449f465',1,'bootloader.c']]],
-  ['github_20com_20northernsturgeon_20justos_20releases_20tag_20v0_200_201_20v0_200_201_20a_202025_2007_2012_1',['&lt;a href=&quot;https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.1&quot;&gt;v0.0.1&lt;/a&gt; / 2025-07-12',['../md_CHANGELOG.html#autotoc_md14',1,'']]],
-  ['github_20com_20northernsturgeon_20justos_20releases_20tag_20v0_200_202_20v0_200_202_20a_202025_2007_2017_2',['&lt;a href=&quot;https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.2&quot;&gt;v0.0.2&lt;/a&gt; / 2025-07-17',['../md_CHANGELOG.html#autotoc_md13',1,'']]],
-  ['github_20com_20northernsturgeon_20justos_20releases_20tag_20v0_200_203_20v0_200_203_20a_202026_2005_2023_3',['&lt;a href=&quot;https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.3&quot;&gt;v0.0.3&lt;/a&gt; / 2026-05-23',['../md_CHANGELOG.html#autotoc_md12',1,'']]],
-  ['github_20com_20northernsturgeon_20justos_20releases_20tag_20v0_200_204_20v0_200_204_20a_202026_2006_2002_4',['&lt;a href=&quot;https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.4&quot;&gt;v0.0.4&lt;/a&gt; / 2026-06-02',['../md_CHANGELOG.html#autotoc_md11',1,'']]],
-  ['github_20com_20northernsturgeon_20justos_20releases_20tag_20v0_200_205_20alpha_20v0_200_205_20alpha_20a_202026_2007_2028_5',['&lt;a href=&quot;https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.5-alpha&quot;&gt;v0.0.5-alpha&lt;/a&gt; / 2026-07-28',['../md_CHANGELOG.html#autotoc_md10',1,'']]],
-  ['github_20com_20northernsturgeon_20justos_20releases_20tag_20v0_200_205_20v0_200_205_20a_202026_2007_2029_6',['&lt;a href=&quot;https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.5&quot;&gt;v0.0.5&lt;/a&gt; / 2026-07-29',['../md_CHANGELOG.html#autotoc_md9',1,'']]],
-  ['github_20com_20northernsturgeon_20justos_20releases_20tag_20v0_200_206_20alpha_20v0_200_206_20alpha_20a_202026_2007_2030_7',['&lt;a href=&quot;https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.6-alpha&quot;&gt;v0.0.6-alpha&lt;/a&gt; / 2026-07-30',['../md_CHANGELOG.html#autotoc_md8',1,'']]],
-  ['github_20com_20northernsturgeon_20justos_20releases_20tag_20v0_200_206_20v0_200_206_20a_202026_2007_2031_8',['&lt;a href=&quot;https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.6&quot;&gt;v0.0.6&lt;/a&gt; / 2026-07-31',['../md_CHANGELOG.html#autotoc_md7',1,'']]],
-  ['github_20com_20northernsturgeon_20justos_20releases_20tag_20v0_200_207_20alpha_201_20v0_200_207_20alpha_201_20a_202026_2010_2023_9',['&lt;a href=&quot;https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.7-alpha.1&quot;&gt;v0.0.7-alpha.1&lt;/a&gt; / 2026-10-23',['../md_CHANGELOG.html#autotoc_md6',1,'']]],
-  ['github_20com_20northernsturgeon_20justos_20releases_20tag_20v0_200_207_20rc1_20v0_200_207_20rc1_20a_202026_2011_2002_10',['&lt;a href=&quot;https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.7-rc1&quot;&gt;v0.0.7-rc1&lt;/a&gt; / 2026-11-02',['../md_CHANGELOG.html#v007rc1',1,'']]],
-  ['gorl_5ft_11',['gorl_t',['../structgorl__t.html',1,'']]]
+  ['fatality_0',['Fatality',['../bootloader_8c.html#a298cf8df014445102568e80784452430',1,'Fatality(UINT32 code, UINT32 subcode):&#160;bootloader.c'],['../dynlink_8c.html#a298cf8df014445102568e80784452430',1,'Fatality(UINT32 code, UINT32 subcode):&#160;bootloader.c'],['../hashtab_8c.html#aa120bf5fee3f574e7562bd96992cee96',1,'Fatality(UINT32 code, UINT32 subcode):&#160;bootloader.c']]],
+  ['feautures_1',['Key feautures',['../index.html#autotoc_md31',1,'']]],
+  ['file_2',['2. Reading the config file',['../bootldr.html#autotoc_md18',1,'']]],
+  ['file_20format_3',['File format',['../tsvboot.html#autotoc_md27',1,'']]],
+  ['file_20loading_4',['File loading',['../bootdl.html#autotoc_md25',1,'']]],
+  ['filedestructor_5',['FileDestructor',['../bootloader_8c.html#a39bb56eddf6f242b20cb32686ca4bbb8',1,'FileDestructor(VOID *file, UINTN filesz):&#160;bootloader.c'],['../dynlink_8c.html#a39bb56eddf6f242b20cb32686ca4bbb8',1,'FileDestructor(VOID *file, UINTN filesz):&#160;bootloader.c']]],
+  ['files_6',['files',['../structboot__info__t.html#a805182e7115d280fe2975d12737447f8',1,'boot_info_t']]],
+  ['files_5fcnt_7',['files_cnt',['../structboot__info__t.html#a5d07776d33433b6d1d6180b1212f80e0',1,'boot_info_t']]],
+  ['format_8',['format',['../tsvboot.html#autotoc_md27',1,'File format'],['../structboot__info__t.html#a1b78850b2d028500ec3c0d7bdaaae006',1,'boot_info_t::format']]]
 ];

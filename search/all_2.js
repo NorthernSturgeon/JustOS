@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['2_20reading_20the_20config_20file_0',['2. Reading the config file',['../bootldr.html#autotoc_md18',1,'']]],
-  ['2_20v0_200_202_20a_202025_2007_2017_1',['&lt;a href=&quot;https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.2&quot;&gt;v0.0.2&lt;/a&gt; / 2025-07-17',['../md_CHANGELOG.html#autotoc_md13',1,'']]],
+  ['2_202025_2007_2017_0',['&lt;a href=&quot;https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.2&quot;&gt;v0.0.2&lt;/a&gt; / 2025-07-17',['../md_CHANGELOG.html#autotoc_md13',1,'']]],
+  ['2_20reading_20the_20config_20file_1',['2. Reading the config file',['../bootldr.html#autotoc_md18',1,'']]],
   ['2025_2007_2012_2',['&lt;a href=&quot;https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.1&quot;&gt;v0.0.1&lt;/a&gt; / 2025-07-12',['../md_CHANGELOG.html#autotoc_md14',1,'']]],
   ['2025_2007_2017_3',['&lt;a href=&quot;https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.2&quot;&gt;v0.0.2&lt;/a&gt; / 2025-07-17',['../md_CHANGELOG.html#autotoc_md13',1,'']]],
   ['2026_2005_2023_4',['&lt;a href=&quot;https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.3&quot;&gt;v0.0.3&lt;/a&gt; / 2026-05-23',['../md_CHANGELOG.html#autotoc_md12',1,'']]],

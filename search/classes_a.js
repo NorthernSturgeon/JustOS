@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['screen_5fresolution_0',['screen_resolution',['../structscreen__resolution.html',1,'']]],
-  ['symbol_5ft_1',['symbol_t',['../structsymbol__t.html',1,'']]]
+  ['page_5fentry_5ft_0',['page_entry_t',['../unionpage__entry__t.html',1,'']]]
 ];

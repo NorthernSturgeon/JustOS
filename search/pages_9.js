@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['the_20changelog_20and_20prospect_0',['THE CHANGELOG (and prospect)',['../md_CHANGELOG.html',1,'']]],
-  ['tsv_20parser_1',['TSV parser',['../tsvboot.html',1,'bootldr']]]
+  ['boot_20process_0',['Boot process',['../bootldr.html#autotoc_md15',1,'']]],
+  ['bootloader_1',['JustOS Bootloader',['../bootldr.html',1,'']]]
 ];

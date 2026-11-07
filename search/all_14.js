@@ -1,10 +1,7 @@
 var searchData=
 [
-  ['ldrerr_2eh_0',['ldrerr.h',['../ldrerr_8h.html',1,'']]],
-  ['libid_5ft_1',['libid_t',['../structlibid__t.html',1,'']]],
-  ['license_2',['License',['../index.html#autotoc_md33',1,'']]],
-  ['linker_3',['Dynamic linker',['../bootdl.html',1,'bootldr']]],
-  ['linking_4',['3. Kernel loading and dynamic linking',['../bootldr.html#autotoc_md19',1,'']]],
-  ['loaded_5ffile_5',['loaded_file',['../structloaded__file.html',1,'']]],
-  ['loading_20and_20dynamic_20linking_6',['3. Kernel loading and dynamic linking',['../bootldr.html#autotoc_md19',1,'']]]
+  ['kernel_0',['JustOS kernel',['../kernel.html',1,'']]],
+  ['kernel_20loading_20and_20dynamic_20linking_1',['3. Kernel loading and dynamic linking',['../bootldr.html#autotoc_md19',1,'']]],
+  ['kernel_5fsize_2',['kernel_size',['../structboot__info__t.html#a8f2e2ccd55c1bcb4afab3690f85d2348',1,'boot_info_t']]],
+  ['key_20feautures_3',['Key feautures',['../index.html#autotoc_md31',1,'']]]
 ];

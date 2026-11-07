@@ -1,9 +1,14 @@
 var searchData=
 [
-  ['e820_2eh_0',['e820.h',['../e820_8h.html',1,'']]],
-  ['e820_5fentry_5ft_1',['e820_entry_t',['../structe820__entry__t.html',1,'']]],
-  ['elf_2ec_2',['elf.c',['../elf_8c.html',1,'']]],
-  ['elf_2eh_3',['elf.h',['../elf_8h.html',1,'']]],
-  ['environment_20setup_4',['5. Environment setup',['../bootldr.html#autotoc_md21',1,'']]],
-  ['exitbootservices_5',['4. ExitBootServices',['../bootldr.html#autotoc_md20',1,'']]]
+  ['data_0',['Working with data',['../tsvboot.html#autotoc_md29',1,'']]],
+  ['dependecies_1',['Dependecies',['../index.html#autotoc_md33',1,'']]],
+  ['dependency_20search_2',['Dependency search',['../bootdl.html#autotoc_md24',1,'']]],
+  ['deployment_20on_20removable_20media_3',['Deployment on removable media',['../index.html#autotoc_md35',1,'']]],
+  ['deployment_20on_20virtual_20drive_4',['Deployment on virtual drive',['../index.html#autotoc_md34',1,'']]],
+  ['disk_20access_5',['1. Disk access',['../bootldr.html#autotoc_md17',1,'']]],
+  ['drive_6',['Deployment on virtual drive',['../index.html#autotoc_md34',1,'']]],
+  ['dynamic_20linker_7',['Dynamic linker',['../bootdl.html',1,'bootldr']]],
+  ['dynamic_20linking_8',['3. Kernel loading and dynamic linking',['../bootldr.html#autotoc_md19',1,'']]],
+  ['dynlink_2ec_9',['dynlink.c',['../dynlink_8c.html',1,'']]],
+  ['dynlink_2eh_10',['dynlink.h',['../dynlink_8h.html',1,'']]]
 ];

@@ -30,7 +30,7 @@ var NAVTREE =
       [ "[Unversioned] / NET: N/A", "md_CHANGELOG.html#autotoc_md2", null ],
       [ "[v0.0.7] / NET: N/A", "md_CHANGELOG.html#autotoc_md3", null ],
       [ "<a href=\"https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.7-rc1\">v0.0.7-rc1</a> / 2026-11-02", "md_CHANGELOG.html#v007rc1", [
-        [ "Current stable version: @ref \"v007rc1\" \"v0.0.7-rc1\"", "md_CHANGELOG.html#autotoc_md1", null ],
+        [ "Current stable version: <a class=\"el\" href=\"md_CHANGELOG.html#v007rc1\" title=\"&lt;a href=&quot;https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.7-rc1&quot;&gt;v0.0.7-rc1&lt;/a&gt; / 2026-11-02\">v0.0.7-rc1</a>", "md_CHANGELOG.html#autotoc_md1", null ],
         [ "Common", "md_CHANGELOG.html#autotoc_md4", null ],
         [ "API", "md_CHANGELOG.html#autotoc_md5", null ]
       ] ],
@@ -44,19 +44,7 @@ var NAVTREE =
       [ "<a href=\"https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.2\">v0.0.2</a> / 2025-07-17", "md_CHANGELOG.html#autotoc_md13", null ],
       [ "<a href=\"https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.1\">v0.0.1</a> / 2025-07-12", "md_CHANGELOG.html#autotoc_md14", null ]
     ] ],
-    [ "JustOS Bootloader", "bootldr.html", [
-      [ "Boot process", "bootldr.html#autotoc_md15", [
-        [ "0. Start", "bootldr.html#autotoc_md16", null ],
-        [ "1. Disk access", "bootldr.html#autotoc_md17", null ],
-        [ "2. Reading the config file", "bootldr.html#autotoc_md18", null ],
-        [ "3. Kernel loading and dynamic linking", "bootldr.html#autotoc_md19", null ],
-        [ "4. ExitBootServices", "bootldr.html#autotoc_md20", null ],
-        [ "5. Environment setup", "bootldr.html#autotoc_md21", null ],
-        [ "6. Transferring control", "bootldr.html#autotoc_md22", null ]
-      ] ],
-      [ "TSV parser", "tsvboot.html", null ],
-      [ "Dynamic linker", "bootdl.html", null ]
-    ] ],
+    [ "JustOS Bootloader", "bootldr.html", "bootldr" ],
     [ "JustOS kernel", "kernel.html", null ],
     [ "Classes", "annotated.html", [
       [ "Class List", "annotated.html", "annotated_dup" ],
@@ -82,5 +70,6 @@ var NAVTREEINDEX =
 "____cpuid_8h_source.html"
 ];
 
-var SYNCONMSG = 'click to disable panel synchronisation';
-var SYNCOFFMSG = 'click to enable panel synchronisation';
+const SYNCONMSG = 'click to disable panel synchronization';
+const SYNCOFFMSG = 'click to enable panel synchronization';
+const LISTOFALLMEMBERS = 'List of all members';
