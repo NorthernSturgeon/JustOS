@@ -111,29 +111,40 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('md_CHANGELOG.h
   <div class="headertitle"><div class="title">THE CHANGELOG (and prospect) </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md0"></a> </p><pre class="fragment">of the JUSTOS
-</pre> <h2 class="doxsection"><a class="anchor" id="autotoc_md1"></a>
-Current stable version: <a class="el" href="#v007rc1" title="&lt;a href=&quot;https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.7-rc1&quot;&gt;v0.0.7-rc1&lt;/a&gt; / 2026-11-02">v0.0.7-rc1</a></h2>
+<div class="textblock"><p><a class="anchor" id="autotoc_md0"></a></p>
+<blockquote class="doxtable">
+<p>of the JUSTOS </p>
+</blockquote>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md1"></a>
+Current stable version: <a class="el" href="#latest_stable" title="&lt;a href=&quot;https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.7&quot; &gt;v0.0.7&lt;/a&gt; / 2026-11-12">v0.0.7</a></h2>
+<hr  />
 <h1 class="doxsection"><a class="anchor" id="autotoc_md2"></a>
 [Unversioned] / NET: N/A</h1>
 <ul>
+<li>ACPI support </li>
+</ul>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md3"></a>
+[v0.0.8] / NET: N/A</h1>
+<ul>
+<li>Foundation for KASLR support</li>
 <li>Optimization of <em><b>strlen</b></em></li>
-<li>Implementation of <em><b>aligned_malloc</b></em></li>
-<li>Implementaion of <em><b>realloc</b></em></li>
+<li>Implementation of <em><b>aligned_malloc</b></em>, <em><b>realloc</b></em></li>
 <li>С++ support</li>
 <li>Approximate videomode setup</li>
 <li>Correct processing of weak bindings</li>
 <li>New place for the <em>boot_info</em></li>
+<li><em><span class="tt">bootloader.h</span></em> - file for the main definitions</li>
 </ul>
 <hr  />
-<h1 class="doxsection"><a class="anchor" id="autotoc_md3"></a>
-[v0.0.7] / NET: N/A</h1>
+<h1 class="doxsection"><a class="anchor" id="latest_stable"></a>
+<a href="https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.7">v0.0.7</a> / 2026-11-12</h1>
 <ul>
-<li>More documentation </li>
+<li>More documentation</li>
+<li><a href="https://northernsturgeon.github.io/JustOS/">Website</a> on Github Pages</li>
 </ul>
-<h1 class="doxsection"><a class="anchor" id="v007rc1"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md4"></a>
 <a href="https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.7-rc1">v0.0.7-rc1</a> / 2026-11-02</h1>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md4"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md5"></a>
 Common</h2>
 <ul>
 <li>License!</li>
@@ -145,14 +156,14 @@ Common</h2>
 <li>Stock TLS mechanism</li>
 <li>Fixed unalignment access and strict-aliasing issues </li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md5"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md6"></a>
 API</h2>
 <ul>
 <li>Renaming: <em><span class="tt">libc.so</span></em> -&gt; <em><span class="tt">klibc.so</span></em></li>
 <li>Changed return type for <em>rwlock_*_crit</em> from <span class="tt">uint8_t</span> to <span class="tt">bool</span></li>
 <li>Macro <em>rgb(r,g,b)</em> for color @ <em><span class="tt">video.h</span></em></li>
 </ul>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md6"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md7"></a>
 <a href="https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.7-alpha.1">v0.0.7-alpha.1</a> / 2026-10-23</h1>
 <ul>
 <li>Prototype of fast heap for small data</li>
@@ -164,7 +175,7 @@ API</h2>
 <li>Using *&lt;stdbool.h&gt;* instead of defining <span class="tt">bool</span> manually</li>
 </ul>
 <hr  />
-<h1 class="doxsection"><a class="anchor" id="autotoc_md7"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md8"></a>
 <a href="https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.6">v0.0.6</a> / 2026-07-31</h1>
 <ul>
 <li>Beautiful CHANGELOG</li>
@@ -173,21 +184,21 @@ API</h2>
 <li><em><span class="tt">physmem.c</span></em> is now a part of kernel, not libc</li>
 <li>Cosmetic changes...</li>
 </ul>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md8"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md9"></a>
 <a href="https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.6-alpha">v0.0.6-alpha</a> / 2026-07-30</h1>
 <ul>
 <li>TLS support prototype</li>
 <li>Now all loaded libraries will reserve memory</li>
 </ul>
 <hr  />
-<h1 class="doxsection"><a class="anchor" id="autotoc_md9"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md10"></a>
 <a href="https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.5">v0.0.5</a> / 2026-07-29</h1>
 <ul>
 <li>Dynamic linking!</li>
 <li>Fixed incorrect implementation of min-heap for page allocator</li>
 <li>Optimizations and bugfixes...</li>
 </ul>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md10"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md11"></a>
 <a href="https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.5-alpha">v0.0.5-alpha</a> / 2026-07-28</h1>
 <ul>
 <li>Size of stack is now configurable in BCF</li>
@@ -196,14 +207,14 @@ API</h2>
 <li>Video framebuffer is no longer declared as <span class="tt">volatile</span></li>
 </ul>
 <hr  />
-<h1 class="doxsection"><a class="anchor" id="autotoc_md11"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md12"></a>
 <a href="https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.4">v0.0.4</a> / 2026-06-02</h1>
 <ul>
 <li>Improved building</li>
 <li>Preparations for dynamic linking support</li>
 </ul>
 <hr  />
-<h1 class="doxsection"><a class="anchor" id="autotoc_md12"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md13"></a>
 <a href="https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.3">v0.0.3</a> / 2026-05-23</h1>
 <ul>
 <li>Developed memory manager</li>
@@ -213,14 +224,14 @@ API</h2>
 <li>Bugfixes...</li>
 </ul>
 <hr  />
-<h1 class="doxsection"><a class="anchor" id="autotoc_md13"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md14"></a>
 <a href="https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.2">v0.0.2</a> / 2025-07-17</h1>
 <ul>
 <li>Implemented <em><b>printf</b></em></li>
 <li>Bugfixes...</li>
 </ul>
 <hr  />
-<h1 class="doxsection"><a class="anchor" id="autotoc_md14"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md15"></a>
 <a href="https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.1">v0.0.1</a> / 2025-07-12</h1>
 <ul>
 <li>Initial... </li>

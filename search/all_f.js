@@ -1,12 +1,11 @@
 var searchData=
 [
-  ['fatality_0',['Fatality',['../bootloader_8c.html#a298cf8df014445102568e80784452430',1,'Fatality(UINT32 code, UINT32 subcode):&#160;bootloader.c'],['../dynlink_8c.html#a298cf8df014445102568e80784452430',1,'Fatality(UINT32 code, UINT32 subcode):&#160;bootloader.c'],['../hashtab_8c.html#aa120bf5fee3f574e7562bd96992cee96',1,'Fatality(UINT32 code, UINT32 subcode):&#160;bootloader.c']]],
-  ['feautures_1',['Key feautures',['../index.html#autotoc_md31',1,'']]],
-  ['file_2',['2. Reading the config file',['../bootldr.html#autotoc_md18',1,'']]],
-  ['file_20format_3',['File format',['../tsvboot.html#autotoc_md27',1,'']]],
-  ['file_20loading_4',['File loading',['../bootdl.html#autotoc_md25',1,'']]],
-  ['filedestructor_5',['FileDestructor',['../bootloader_8c.html#a39bb56eddf6f242b20cb32686ca4bbb8',1,'FileDestructor(VOID *file, UINTN filesz):&#160;bootloader.c'],['../dynlink_8c.html#a39bb56eddf6f242b20cb32686ca4bbb8',1,'FileDestructor(VOID *file, UINTN filesz):&#160;bootloader.c']]],
-  ['files_6',['files',['../structboot__info__t.html#a805182e7115d280fe2975d12737447f8',1,'boot_info_t']]],
-  ['files_5fcnt_7',['files_cnt',['../structboot__info__t.html#a5d07776d33433b6d1d6180b1212f80e0',1,'boot_info_t']]],
-  ['format_8',['format',['../tsvboot.html#autotoc_md27',1,'File format'],['../structboot__info__t.html#a1b78850b2d028500ec3c0d7bdaaae006',1,'boot_info_t::format']]]
+  ['e820_2eh_0',['e820.h',['../e820_8h.html',1,'']]],
+  ['e820_5fentry_5ft_1',['e820_entry_t',['../structe820__entry__t.html',1,'']]],
+  ['elf_2ec_2',['elf.c',['../elf_8c.html',1,'']]],
+  ['elf_2eh_3',['elf.h',['../elf_8h.html',1,'']]],
+  ['entry_20point_4',['1. Entry point',['../int.html#autotoc_md32',1,'']]],
+  ['environment_5',['Environment',['../kernel.html#autotoc_md35',1,'']]],
+  ['environment_20setup_6',['5. Environment setup',['../bootldr.html#autotoc_md22',1,'']]],
+  ['exitbootservices_7',['4. ExitBootServices',['../bootldr.html#autotoc_md21',1,'']]]
 ];

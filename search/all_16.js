@@ -1,9 +1,13 @@
 var searchData=
 [
-  ['makechar16_0',['makechar16',['../tsv_8c.html#a1d501d6564f2e08440aa6b79b14dfcb4',1,'makechar16(CHAR8 *base):&#160;tsv.c'],['../tsv_8h.html#a1d501d6564f2e08440aa6b79b14dfcb4',1,'makechar16(CHAR8 *base):&#160;tsv.c']]],
-  ['max_5fphy_5faddr_1',['MAX_PHY_ADDR',['../bootloader_8c.html#a58159ab0f7e54f3aa97d3acdc1f1aad1',1,'bootloader.c']]],
-  ['media_2',['Deployment on removable media',['../index.html#autotoc_md35',1,'']]],
-  ['mmap_3',['MMAP',['../bootloader_8c.html#af5d8f1d18ba8d068e7488f3c99d9735f',1,'bootloader.c']]],
-  ['mmap_4',['mmap',['../structboot__info__t.html#a3125e5bb1d169584d81ce939f1b09f1d',1,'boot_info_t']]],
-  ['mmap_5flen_5',['mmap_len',['../structboot__info__t.html#aaf7a41a3ec43c85b56ce29f46d43dfe1',1,'boot_info_t']]]
+  ['latest_5fstable_20v0_200_207_0',['Current stable version: &lt;a class=&quot;el&quot; href=&quot;md_CHANGELOG.html#latest_stable&quot; title=&quot;&amp;lt;a href=&amp;quot;https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.7&amp;quot; &amp;gt;v0.0.7&amp;lt;/a&amp;gt; / 2026-11-12&quot;&gt;v0.0.7&lt;/a&gt;',['../md_CHANGELOG.html#autotoc_md1',1,'']]],
+  ['ldrerr_2eh_1',['ldrerr.h',['../ldrerr_8h.html',1,'']]],
+  ['level_20code_2',['3. High-level code',['../int.html#autotoc_md34',1,'']]],
+  ['libid_5ft_3',['libid_t',['../structlibid__t.html',1,'']]],
+  ['license_4',['License',['../index.html#autotoc_md43',1,'']]],
+  ['linker_5',['Dynamic linker',['../bootdl.html',1,'bootldr']]],
+  ['linking_6',['3. Kernel loading and dynamic linking',['../bootldr.html#autotoc_md20',1,'']]],
+  ['loaded_5ffile_7',['loaded_file',['../structloaded__file.html',1,'']]],
+  ['loading_8',['File loading',['../bootdl.html#autotoc_md26',1,'']]],
+  ['loading_20and_20dynamic_20linking_9',['3. Kernel loading and dynamic linking',['../bootldr.html#autotoc_md20',1,'']]]
 ];

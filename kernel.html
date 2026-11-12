@@ -112,10 +112,47 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('kernel.html','
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="md_docs_2kernel_2kernel"></a></p>
-<p>The heart of the JustOS </p>
+<blockquote class="doxtable">
+<p>The heart of the OS... </p>
+</blockquote>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md35"></a>
+Environment</h1>
+<p>At the moment control is transferred, the kernel receives these things from the bootloader in a ready-to-use form:</p>
+<ul>
+<li>Virtual address space</li>
+<li>Global Descriptor Table</li>
+<li>E820 memory map</li>
+<li>Video mode and framebuffer</li>
+<li>All specifed modules and libraries with resolved relocations and initialized TLS</li>
+<li>Stack space</li>
+<li>RSDP of ACPI</li>
+</ul>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md36"></a>
+System initialization</h1>
+<p>The kernel executes an initialization sequence:</p>
+<ol type="1">
+<li>Clear the screen, initialize the console</li>
+<li><p class="startli">Initialize the physical memory allocator:</p>
+<p class="startli">a. Sort and minimize the memory map</p>
+<p class="startli">b. Create the <span class="tt">gorl</span></p>
+<p class="startli">c. Mark all memory used by the OS as busy</p>
+<p class="startli">d. Initialize <span class="tt">malloc</span> of <em>klibc</em></p>
+</li>
+<li>Create and apply the IDT</li>
+<li>Enable the <a class="el" href="int.html" title="Interrupts subsystem">interrupts</a></li>
+<li>Test the access to TLS data</li>
+<li>Render the splash screen </li>
+</ol>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->
+<div id="page-nav" class="page-nav-panel">
+<div id="page-nav-resize-handle"></div>
+<div id="page-nav-tree">
+<div id="page-nav-contents">
+</div><!-- page-nav-contents -->
+</div><!-- page-nav-tree -->
+</div><!-- page-nav -->
 </div><!-- container -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

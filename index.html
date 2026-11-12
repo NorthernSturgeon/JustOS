@@ -113,14 +113,14 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('index.html',''
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="mainpage"></a></p>
 <p>Operating system for x86-64.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md30"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md37"></a>
 About</h2>
 <p>The core principles of JustOS are portability and extensibility. Achieving this, however, requires implementing a variety of alternative engineering tricks and finding optimal solutions under complex conditions...</p>
 <p>See the history and follow the development progress in real time in the <a href="https://github.com/NorthernSturgeon/JustOS/blob/develop/CHANGELOG.md">changelog</a>@develop</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md31"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md38"></a>
 Key feautures</h2>
 <ul>
-<li>UEFI bootloader</li>
+<li>Custom UEFI bootloader</li>
 <li>PIE for whole OS</li>
 <li>Dynamic linking for kernel</li>
 <li>Human-readable configuration files</li>
@@ -129,20 +129,20 @@ Key feautures</h2>
 <li>Much more in the future...</li>
 </ul>
 <p><a href="https://northernsturgeon.github.io/JustOS/"><b>Documentation</b></a></p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md32"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md39"></a>
 System requirements:</h2>
 <ul>
 <li>CPU: Any processor with x86-64 architecture support</li>
 <li>UEFI support</li>
 <li>At least 128 MB of RAM</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md33"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md40"></a>
 Dependecies</h2>
 <ul>
-<li>GNU-EFI for bootloader</li>
+<li>GNU-EFI for bootloader (<a href="https://sourceforge.net/projects/gnu-efi/">source</a>)</li>
 <li>Doxygen for generating documentation</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md34"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md41"></a>
 Deployment on virtual drive</h2>
 <ol type="1">
 <li>Create .vhd file that contains EFI partition (MUST be 1st partition) with size at least 32 MiB</li>
@@ -151,7 +151,7 @@ Deployment on virtual drive</h2>
 <li>Run <span class="tt">make build</span> and <span class="tt">sudo make install</span> in both <span class="tt">bootldr</span> and <span class="tt">kernel</span> folders</li>
 <li>The drive is ready to use!</li>
 </ol>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md35"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md42"></a>
 Deployment on removable media</h2>
 <ol type="1">
 <li>Fill <b>TARGETMEDIAPATH</b> @ <em><span class="tt">local.env</span></em> with absolute path to the root folder of the media</li>
@@ -159,7 +159,7 @@ Deployment on removable media</h2>
 <li>Run <span class="tt">deploy.sh</span> in <span class="tt">utils</span> folder</li>
 <li>Profit!</li>
 </ol>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md36"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md43"></a>
 License</h2>
 <p>JustOS is licensed under the Mozilla Public License, v. 2.0.</p>
 <p>The implementation of the XXHash64 algorithm (bootldr/xxhash64.c) is based on code by <a href="https://github.com/stbrumme/xxhash">Stephan Brumme</a>, which was originally published under the MIT license. The full MIT copyright and permission notice is preserved in the header of that file. </p>

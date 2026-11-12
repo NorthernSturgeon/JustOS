@@ -112,31 +112,33 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('bootldr.html',
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="md_docs_2bootloader_2bootloader"></a></p>
-<p>Dynamic linking, identity mapping into the higher half, early environment setup - all of this leads JustOS to build a custom bootloader instead of porting existing solutions.</p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md15"></a>
+<blockquote class="doxtable">
+<p>Dynamic linking, identity mapping into the higher half, early environment setup - all of this leads JustOS to build a custom bootloader instead of porting existing solutions. </p>
+</blockquote>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md16"></a>
 Boot process</h1>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md16"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md17"></a>
 0. Start</h2>
 <p>The bootloader's life revolves around the <a href="structboot__info__t.html"><span class="tt">boot_info</span></a> structure, to which it passes all the information the kernel may need. First, the pointer to the ACPI structures is filled in. As the code runs, all <em>19 fields</em> get their values.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md17"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md18"></a>
 1. Disk access</h2>
 <p><span class="tt">OpenRoot</span> gets from EFI a handle to the filesystem where the bootloader is stored, and <span class="tt">ReadFile</span> is a wrapper for loading files into memory. Currently, partitions other than ESP are not supported. <span class="tt">ReadFile</span>, like the bootloader as a whole, always uses <b>absolute paths</b>.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md18"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md19"></a>
 2. Reading the config file</h2>
 <p>The bootloader looks for the config file at <em><span class="tt">\JUSTOS\justboot.tsv</span></em>, loads it using the <em><a class="el" href="tsvboot.html" title="TSV parser">TSV parser</a></em>, and applies the settings: </p><pre class="fragment">video    width    height    #Requested screen resolution (in pixels)
 stack    size               #Kernel stack size (bytes)
 splash   path               #Path to splash (.bmp)
-</pre><h2 class="doxsection"><a class="anchor" id="autotoc_md19"></a>
+</pre><h2 class="doxsection"><a class="anchor" id="autotoc_md20"></a>
 3. Kernel loading and dynamic linking</h2>
 <p>Config parsing continues. The bootloader <b>does not load the kernel into memory directly</b>: that is delegated to the <em><a class="el" href="bootdl.html" title="Dynamic linker">dynamic linker</a></em>. After the last one is initialized, the image path is passed to <span class="tt">dl_process</span>, which loads and processes the kernel and all its dependencies itself; once modules appear, it will be called for each of them. The dynamic linker finishes the work and returns <em>a list of all files loaded into memory</em> for later use.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md20"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md21"></a>
 4. ExitBootServices</h2>
 <p>Preparation for taking full control of the system begins. <span class="tt">allocate_ptzone</span> calculates the memory needed for <em>page tables</em> and requests it from the firmware. If the allocation succeeds, the bootloader <b>zeroes the region</b>.</p>
 <p><span class="tt">BS-&gt;ExitBootServices()</span> is given 4 attempts because the memory map is volatile. If it fails, the bootloader is forced to terminate.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md21"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md22"></a>
 5. Environment setup</h2>
 <p>A standalone console is initialized. Then the paging setup function is called, which, based on the EFI memory map, creates an identity mapping in the higher half of the address space. After that, the memory map is converted to the E820 format used by the kernel.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md22"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md23"></a>
 6. Transferring control</h2>
 <div class="fragment"><div class="line"><span class="keyword">extern</span> VOID start_kernel(<a class="code hl_struct" href="structboot__info__t.html">boot_info_t</a> *boot_info, VOID *k_entry, VOID *k_stack, VOID *cr3);</div>
 </div><!-- fragment --><p>The remaining <span class="tt">boot_info</span> fields are filled in, and <span class="tt">start_kernel</span>, the last bootloader function, is called. It is written in assembly and does the following:</p>

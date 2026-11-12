@@ -1,12 +1,9 @@
 var searchData=
 [
-  ['data_0',['Working with data',['../tsvboot.html#autotoc_md29',1,'']]],
-  ['dependecies_1',['Dependecies',['../index.html#autotoc_md33',1,'']]],
-  ['dependency_20search_2',['Dependency search',['../bootdl.html#autotoc_md24',1,'']]],
-  ['deployment_20on_20removable_20media_3',['Deployment on removable media',['../index.html#autotoc_md35',1,'']]],
-  ['deployment_20on_20virtual_20drive_4',['Deployment on virtual drive',['../index.html#autotoc_md34',1,'']]],
-  ['disk_20access_5',['1. Disk access',['../bootldr.html#autotoc_md17',1,'']]],
-  ['drive_6',['Deployment on virtual drive',['../index.html#autotoc_md34',1,'']]],
-  ['dynamic_20linker_7',['Dynamic linker',['../bootdl.html',1,'bootldr']]],
-  ['dynamic_20linking_8',['3. Kernel loading and dynamic linking',['../bootldr.html#autotoc_md19',1,'']]]
+  ['changelog_20and_20prospect_0',['THE CHANGELOG (and prospect)',['../md_CHANGELOG.html',1,'']]],
+  ['code_1',['3. High-level code',['../int.html#autotoc_md34',1,'']]],
+  ['common_2',['Common',['../md_CHANGELOG.html#autotoc_md5',1,'']]],
+  ['config_20file_3',['2. Reading the config file',['../bootldr.html#autotoc_md19',1,'']]],
+  ['control_4',['6. Transferring control',['../bootldr.html#autotoc_md23',1,'']]],
+  ['current_20stable_20version_3a_20latest_5fstable_20v0_200_207_5',['Current stable version: &lt;a class=&quot;el&quot; href=&quot;md_CHANGELOG.html#latest_stable&quot; title=&quot;&amp;lt;a href=&amp;quot;https://github.com/NorthernSturgeon/JustOS/releases/tag/v0.0.7&amp;quot; &amp;gt;v0.0.7&amp;lt;/a&amp;gt; / 2026-11-12&quot;&gt;v0.0.7&lt;/a&gt;',['../md_CHANGELOG.html#autotoc_md1',1,'']]]
 ];

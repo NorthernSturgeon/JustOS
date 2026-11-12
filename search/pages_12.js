@@ -1,4 +1,6 @@
 var searchData=
 [
-  ['media_0',['Deployment on removable media',['../index.html#autotoc_md35',1,'']]]
+  ['kernel_0',['JustOS kernel',['../kernel.html',1,'']]],
+  ['kernel_20loading_20and_20dynamic_20linking_1',['3. Kernel loading and dynamic linking',['../bootldr.html#autotoc_md20',1,'']]],
+  ['key_20feautures_2',['Key feautures',['../index.html#autotoc_md38',1,'']]]
 ];
