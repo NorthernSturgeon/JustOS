@@ -7,7 +7,7 @@ The core principles of JustOS are portability and extensibility. Achieving this,
 See the history and follow the development progress in real time in the [changelog](https://github.com/NorthernSturgeon/JustOS/blob/develop/CHANGELOG.md)@develop
 
 ### Key feautures
-- UEFI bootloader
+- Custom UEFI bootloader
 - PIE for whole OS
 - Dynamic linking for kernel
 - Human-readable configuration files
@@ -23,7 +23,7 @@ See the history and follow the development progress in real time in the [changel
 - At least 128 MB of RAM
 
 ### Dependecies
-- GNU-EFI for bootloader
+- GNU-EFI for bootloader ([source](https://sourceforge.net/projects/gnu-efi/))
 - Doxygen for generating documentation
 
 ### Deployment on virtual drive

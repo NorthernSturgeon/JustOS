@@ -1,6 +1,5 @@
 # TSV parser {#tsvboot}
-
-Mini-library for parsing the config.
+> Mini-library for parsing the config.
 
 ### File format
 The bootloader config is represented by a structure based on TSV (tab-separated values). The first column of a row holds the key, and all following columns in that row are values for that key. For readability, the file may be separated by blank lines. No other entries are allowed in the file. The parser correctly handles both LF and CRLF as line endings. Keys and values in the file cannot contain the characters: `\t`, `\n`, `\r`, `\0`.

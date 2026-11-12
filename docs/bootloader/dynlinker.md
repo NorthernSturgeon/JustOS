@@ -1,5 +1,5 @@
 # Dynamic linker {#bootdl}
-JustOS uses position-independent code, which requires dynamic linking before launching...
+> JustOS uses position-independent code, which requires dynamic linking before launching...
 
 ### Overview
 Dynamic linker of the JustOS bootloader uses hash tables for symbol processing. The one named `loaded_libs` contains a list of all files loaded into memory, while `global_exports` stores the symbols of the global namespace (it is possible to use a separate local namespace for each module).

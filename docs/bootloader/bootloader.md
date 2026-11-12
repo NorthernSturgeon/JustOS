@@ -1,5 +1,5 @@
 # JustOS Bootloader {#bootldr}
-Dynamic linking, identity mapping into the higher half, early environment setup - all of this leads JustOS to build a custom bootloader instead of porting existing solutions.
+> Dynamic linking, identity mapping into the higher half, early environment setup - all of this leads JustOS to build a custom bootloader instead of porting existing solutions.
 
 ## Boot process
 ### 0. Start
