@@ -11,8 +11,7 @@
  * \file dynlink.c
  */
 
-#include <efi/efi.h>
-#include <efi/efilib.h>
+#include "bootloader.h"
 #include "ldrerr.h"
 #include "hashtab.h"
 #include "dynlink.h"
@@ -20,17 +19,6 @@
 #include <alloca.h>
 
 #define USE_ALLOCA
-
-//from bootloader.c (TODO: create bootloader.h)
-#define CONV_PTR(p) (void*)(((UINT64)(p))|0xffff800000000000ull)
-extern __attribute__((noreturn)) VOID Fatality(UINT32 code, UINT32 subcode);
-extern UINTN ReadFile(EFI_FILE_HANDLE fileDir, CHAR16 *filename, VOID** buffer, UINTN addend);
-extern VOID FileDestructor(VOID* file, UINTN filesz);
-
-#define ALLOC_KPAGES(ptr, size) uefi_call_wrapper(BS->AllocatePages, 4, AllocateAnyPages, EfiLoaderData, size, ptr)
-static inline size_t div_up(size_t a, size_t b) { return (a+b-1)/b; }
-#define TO_PAGES(ptr) div_up(ptr, 4096)
-// ---
 
 static EFI_FILE_HANDLE dl_workdir;
 static hashtab_t global_exports;

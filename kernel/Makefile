@@ -10,19 +10,20 @@
 include ../local.env
 
 LIBC_SOURCES := lib/mem.S lib/atomic.S lib/memory.c \
-				lib/console.c lib/font.c lib/arena.c
-#				lib/crc32.c lib/string.c
+				lib/console.c lib/font.c lib/arena.c \
+				lib/string.c
+# lib/crc32.c 
 
 KERNEL_SOURCES := header.S kernel.c isr.S video.c \
 				physmem.c isr_id.S interrupts.c
 
 CFLAGS := -c -I include -nostdlib -ffreestanding -fPIC \
-	-fomit-frame-pointer -fno-stack-protector -fno-strict-aliasing \
+	-fomit-frame-pointer -fno-stack-protector\
 	-Wall -Wextra -Werror -fno-plt -ftree-vectorize \
 	-fno-asynchronous-unwind-tables -include lib/types.h \
-	-march=x86-64 -std=c17 -fno-tree-vrp -mstackrealign \
+	-march=x86-64 -std=c17 -fno-strict-aliasing -mstackrealign \
 	-O2 -mcmodel=medium -mno-red-zone -fno-semantic-interposition \
-	-ftls-model=local-dynamic -DLOG_DEBUG
+	-ftls-model=local-dynamic
 
 KERNEL_CFLAGS := $(CFLAGS) -fvisibility=hidden
 

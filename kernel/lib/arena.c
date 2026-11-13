@@ -322,7 +322,7 @@ static bool recalc_and_check(){
 
 static void aalloc_gc(){
 	log_debug("aalloc_gc(): ");
-	size_t *val = NULL, *prev = (size_t*)&cpu_pending, counter = 0;
+	size_t *val = NULL, *prev = (size_t*)&cpu_pending;//, counter = 0;
 	val = (size_t*)atomic_exchange_explicit(prev, (size_t)val, __ATOMIC_ACQUIRE);
 	AllocatorArena *arena;
 	
@@ -335,7 +335,6 @@ static void aalloc_gc(){
 			// log_debug("    lazy_free(%u, %u) @ %p\n", (size_t)start*ARENA_RESOLUTION, *(val+1), arena);
 			mark_free(arena, start, start + *(val+1)); //little-endian only!
 			val = next;
-			counter++;
 		}
 		// sort arenas
 		if (recalc_and_check()) sort_and_update();

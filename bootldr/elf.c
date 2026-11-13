@@ -7,13 +7,11 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include <efi/efi.h>
-#include <efi/efilib.h>
-
 /**
  * \file elf.c
  */
 
+#include "bootloader.h"
 #include "elf.h"
 
 uint8_t check_elf(void* file){

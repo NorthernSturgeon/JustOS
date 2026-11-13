@@ -53,8 +53,10 @@ memset:
 	test %rdx, %rdx
 	jz memset2
 	cld
-	movq %rsi, %rax
 	movq %rdx, %rcx
+	movq %rsi, %rax
+	movq %rdi, %rdx
 	rep stosb
+	movq %rdx, %rax
 memset2:
 	ret

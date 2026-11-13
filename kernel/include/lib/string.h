@@ -31,6 +31,8 @@ extern void* memcpy(void* dest, void* src, size_t n);
 #define zeromem(dest, n) memset(dest, 0, n)
 //#define strcpy(dest, src) memccpy((void*)dest, (void*)src, 0)
 
+extern size_t strlen(const char *str);
+
 #ifdef __cplusplus
 }
 #endif

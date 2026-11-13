@@ -7,8 +7,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include <efi/efi.h>
-#include <efi/efilib.h>
+#include "bootloader.h"
 #include "xxhash64.h"
 #include "ldrerr.h"
 #include "hashtab.h"
@@ -16,8 +15,6 @@
 /**
  * \file hashtab.c
  */
-
-extern _Noreturn VOID Fatality(UINT32 code, UINT32 subcode); //from bootloader.c
 
 #define SEED 17362530560801976147ull
 

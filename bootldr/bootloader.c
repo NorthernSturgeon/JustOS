@@ -14,6 +14,7 @@
 #include <efi/efi.h>
 #include <efi/efilib.h>
 
+#include "bootloader.h"
 #include "elf.h"
 #include "ldrerr.h"
 #include "lib/video.h"
@@ -21,14 +22,6 @@
 #include "e820.h"
 #include "tsv.h"
 #include "dynlink.h"
-
-//#define ErrorCheck(actual, expected, msg) if(actual != expected) {Print(msg);return actual;}
-
-//#define CONV_PTR(p) ((VOID*)(((UINT64)(p))|(0xffff8ull<<44)))
-//                                          6456484032241608
-#define CONV_PTR(p) (void*)(((UINT64)(p))|0xffff800000000000ull)
-
-#define STOP() for(;;)
 
 /** \brief virtual address structure at address translation on x86-64 */
 typedef union{
@@ -87,57 +80,6 @@ typedef struct __attribute__((__packed__)){
 	UINT16 ppl; ///< scanline of the framebuffer
 } boot_info_t;
 #undef DEBUG
-
-/**
- Setup EfiRuntimeServices support
- If commented, boot_info->rtsvcs will be set to zero
-*/
-//#define SETVAMAP
-
-/**
- Enables the workaround for a bug in the UEFI firmware
- that causes a system crash when an attempt is made
- to assign a memory type from a range
- reserved for use by OS developers.
-*/
-#define ovmf_r11337
-
-/** GOP video mode overriding */
-//#define CUSTOM_VIDEOMODE 12
-
-/**
- JustOS makes an assumption that the system has less than 2^48
- bytes of RAM; otherwise, address translation will be wrong.
-*/
-#define MAX_PHY_ADDR 0x00007fffffffffffull
-
-#ifdef ovmf_r11337
-#define KERNEL_MEMORY_TYPE EfiLoaderData
-#else
-#define KERNEL_MEMORY_TYPE 0x80000000
-#endif
-
-/** Memory allocated via these macroses will be preserved in the kernel */
-#define ALLOC_KPOOL(ptr, size) uefi_call_wrapper(BS->AllocatePool, 3, KERNEL_MEMORY_TYPE, size, ptr)
-#define FREE_KPOOL(ptr) uefi_call_wrapper(BS->FreePool, 1, ptr)
-#define ALLOC_KPAGES(ptr, size) uefi_call_wrapper(BS->AllocatePages, 4, AllocateAnyPages, KERNEL_MEMORY_TYPE, size, ptr)
-#define FREE_KPAGES(ptr, size) uefi_call_wrapper(BS->FreePages, 2, ptr, size)
-
-static inline size_t div_up(size_t a, size_t b) { return (a+b-1)/b; }
-#define TO_PAGES(ptr) div_up(ptr, 4096)
-
-/** Macro for indexing into the EfiMemoryMap, which is pointed to by `mmap` variable */
-#define MMAP(i) ((EFI_MEMORY_DESCRIPTOR*)((UINT8*)mmap+descsize*i))
-
-#define VALID_DESC(desc) ((desc->Type<EfiMaxMemoryType || desc->Type==KERNEL_MEMORY_TYPE) && desc->NumberOfPages && !(desc->PhysicalStart&4095))
-#define PTZONEMEM(desc) ((desc->Type==EfiBootServicesData)||(desc->Type==EfiBootServicesCode)||(desc->Type==EfiConventionalMemory))
-
-//                     6448403224160800
-#define PTENTRY_MASK 0x0000fffffffff000ull
-
-#define DFLT_PTE_ATTR 3 // WRITE | PRESENT
-#define GET_PTE(addr) ((page_entry_t*)(((UINT64)(addr))&PTENTRY_MASK))
-#define SET_PTE(addr, attr) ((((UINT64)(addr))&PTENTRY_MASK)|(attr))
 
 // [start_kernel]
 extern VOID start_kernel(boot_info_t *boot_info, VOID *k_entry, VOID *k_stack, VOID *cr3);
@@ -201,6 +143,7 @@ VOID Fatality(UINT32 code, UINT32 subcode){
 	uefi_call_wrapper(ST->ConIn->ReadKeyStroke, 2, ST->ConIn, &Key);
 	Print(L"RT->ResetSystem(EfiResetCold);");
 	uefi_call_wrapper(RT->ResetSystem,4,EfiResetCold,EFI_SUCCESS,0,NULL);
+	STOP();
 }
 
 /**
@@ -522,9 +465,9 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 	register EFI_STATUS status; //one variable for all
 
 	// get pointer to ACPI structures
-	boot_info_t boot_info;
+	boot_info_t* boot_info = AllocatePool(sizeof(boot_info_t));
 
-	setup_acpi(&boot_info);
+	setup_acpi(boot_info);
 	
 	// load the kernel
 	// open volume
@@ -540,16 +483,16 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 
 	// set videomode
 	setup_video(
-		&boot_info,
+		boot_info,
 		tsv_parseint(tsv_search(tsv, "video", 1)),
 		tsv_parseint(tsv_search(tsv, "video", 2))
 	);
 
 	// parse size of kernel's stack
-	boot_info.stack_size = tsv_parseint(tsv_search(tsv, "stack", 1));
-	Print(L"D: stack size: %llu\n", boot_info.stack_size);
+	boot_info->stack_size = tsv_parseint(tsv_search(tsv, "stack", 1));
+	Print(L"D: stack size: %llu\n", boot_info->stack_size);
 
-	load_splash(&boot_info, tsv, root);
+	load_splash(boot_info, tsv, root);
 
 	// get path to the kernel
 	CHAR8* kernelpath = tsv_search(tsv, "kernel", 1);
@@ -565,20 +508,25 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 	libid_weakptr kernel_lib = dl_process(kernelpath, TRUE);
 
 	VOID *kernel = kernel_lib->image;
-	boot_info.kernel_size = kernel_lib->imagesize;
+	boot_info->kernel_size = kernel_lib->imagesize;
 
 	FreePool(tsv);
 	Print(L"D: kernel loaded at: %p\n", kernel);
 
-	ALLOC_KPAGES(&boot_info.stack, TO_PAGES(boot_info.stack_size));
-	if (!boot_info.stack) Fatality(LDR_MEM, 9);
-	register UINT64 stack = (UINT64)CONV_PTR(boot_info.stack+boot_info.stack_size);
+	ALLOC_KPAGES(&boot_info->stack, TO_PAGES(boot_info->stack_size));
+	if (!boot_info->stack) Fatality(LDR_MEM, 9);
+	register UINT64 stack = (UINT64)(boot_info->stack+boot_info->stack_size-sizeof(boot_info_t));
+
+	CopyMem((VOID*)stack, boot_info, sizeof(boot_info_t));
+	FreePool(boot_info);
+	boot_info = (VOID*)stack;
+	stack = (UINT64)CONV_PTR(stack);
 	
 	// get entry point of the kernel
 	UINT64 entry = ((Elf64_Ehdr*)kernel)->e_entry;
 
-	dl_fini(&boot_info.files, &boot_info.files_cnt);
-	boot_info.files = CONV_PTR(boot_info.files);
+	dl_fini(&boot_info->files, &boot_info->files_cnt);
+	boot_info->files = CONV_PTR(boot_info->files);
 
 	EFI_MEMORY_DESCRIPTOR *mmap;
 	UINTN mmapsize=1, mapkey, descsize, num_entries;
@@ -586,7 +534,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 
 	// preserve memory for page tables
 	GetMMap(&mmap, &mmapsize, &mapkey, &descsize, &descver, &num_entries);
-	status = allocate_ptzone(&boot_info, mmap, num_entries, descsize);
+	status = allocate_ptzone(boot_info, mmap, num_entries, descsize);
 
 	#ifdef DEBUG
 	// print memory map
@@ -628,7 +576,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 	}
 
 	// initialize rendering
-	init_video(boot_info.vram, boot_info.width, boot_info.height);
+	init_video(boot_info->vram, boot_info->width, boot_info->height);
 
 	// white on black
 	set_color(0x00ffffff, 0x00000000);
@@ -642,10 +590,10 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 	// font test
 	printf("0123456789abcdef\r\nghijklmnopqrstuvwxyz\r\n!?#$%%&\"'()*+-,./@\\\r\nABCDEFGHIJKLM\r\nNOPQRSTUVWXYZ[]{}:;`~_^|<=>\r\n");
 
-	setup_paging(&boot_info, mmap, num_entries, descsize);
+	setup_paging(boot_info, mmap, num_entries, descsize);
 /*
 	itdr.limit = 4095;
-	itdr.base = boot_info.ptzone + boot_info.ptzone_size*4096 + 8192;
+	itdr.base = boot_info->ptzone + boot_info->ptzone_size*4096 + 8192;
 	asm volatile ("lidt %0" : : "m"(itdr));
 	printf("idt changed\r\n");
 */
@@ -656,12 +604,12 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 	//set_color(0x00ffffff, 0x00000000);
 	printf("SetVirtualAddressMap() - %u!\r\n", (UINT64)status);
 	if (EFI_ERROR(status)) STOP();
-	boot_info.rtsvcs = CONV_PTR(SystemTable->RuntimeServices);
+	boot_info->rtsvcs = CONV_PTR(SystemTable->RuntimeServices);
 	#else
-	boot_info.rtsvcs = NULL;
+	boot_info->rtsvcs = NULL;
 	#endif
 
-	convert_mmap_to_e820(&boot_info, mmap, num_entries, descsize);
+	convert_mmap_to_e820(boot_info, mmap, num_entries, descsize);
 
 	// start kernel
 	if (entry < 0x1000) entry += 0x1000;
@@ -672,16 +620,13 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 	printf("kernel: %p\r\n", CONV_PTR(kernel));
 	printf("e_entry: %p\r\n", entry);
 	printf("stack: %p\r\n", stack);
-	printf("ptzone: %p\r\n", boot_info.ptzone);
+	printf("ptzone: %p\r\n", boot_info->ptzone);
 
 	// convert boot_info pointers
-	boot_info.mmap = CONV_PTR(boot_info.mmap);
-	boot_info.vram = CONV_PTR(boot_info.vram);
-	boot_info.ptzone = CONV_PTR(boot_info.ptzone);
-	boot_info.stack = CONV_PTR(boot_info.stack);
-
-	// copy boot_info into kernel
-	RtCopyMem((UINT8*)kernel+4096, &boot_info, sizeof(boot_info));
+	boot_info->mmap = CONV_PTR(boot_info->mmap);
+	boot_info->vram = CONV_PTR(boot_info->vram);
+	boot_info->ptzone = CONV_PTR(boot_info->ptzone);
+	boot_info->stack = CONV_PTR(boot_info->stack);
 
 	printf("We are ready to start!\r\n");
 	#ifdef DEBUG
@@ -690,8 +635,8 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 
 	asm volatile ("":::"memory");
 
-	start_kernel(CONV_PTR((UINT8*)kernel+4096), CONV_PTR(entry+kernel), \
-	(VOID*)stack, (VOID*)((UINT64)boot_info.ptzone&MAX_PHY_ADDR));
+	start_kernel(CONV_PTR(boot_info), CONV_PTR(entry+kernel), \
+	(VOID*)stack, (VOID*)((UINT64)boot_info->ptzone&MAX_PHY_ADDR));
 
 	//HOW??
 	return EFI_SUCCESS;

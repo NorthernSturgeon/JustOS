@@ -13,10 +13,6 @@
 .globl asm_hlt
 
 .text
-	__boot_info:
-		.rept 16
-		.quad 0
-		.endr
 	__tls_get_addr:
 		movq (%rdi), %rax
 		movq %gs:(%rax), %rax

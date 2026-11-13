@@ -6,15 +6,18 @@
 
 ## [Unversioned] / NET: N/A
 - ACPI support
+
+***
+
 ## [v0.0.8] / NET: N/A
-- Foundation for KASLR support
-- Optimization of ***strlen***
-- Implementation of ***aligned_malloc***, ***realloc***
-- С++ support
-- Approximate videomode setup
-- Correct processing of weak bindings
-- New place for the *boot_info*
-- *`bootloader.h`* - file for the main definitions
+- [ ] Foundation for KASLR support
+- [x] Optimization of ***strlen***
+- [ ] Implementation of ***aligned_malloc***, ***realloc***
+- [ ] С++ support
+- [ ] Approximate videomode setup
+- [ ] Correct processing of weak bindings
+- [x] New place for the *boot_info*
+- [x] *`bootloader.h`* - file for the main definitions
 
 ***
 

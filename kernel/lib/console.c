@@ -11,6 +11,7 @@
 #include "lib/font.h"
 #include "video.h"
 #include "lib/console.h"
+#include "lib/string.h"
 
 static uint8_t column_width = 60;
 
@@ -42,13 +43,6 @@ struct console_info get_console_info(void){
 	return cs;
 }
 
-// TODO: optimized version in assembly
-size_t strlen(const char *str){
-	size_t i = 0;
-	while (str[i]) i++;
-	return i;
-}
-
 void stdout(const char *str, size_t len){
 	struct screen_resolution sr = get_res();
 	uint16_t w = sr.width;
@@ -69,17 +63,6 @@ void stdout(const char *str, size_t len){
 		}
 		x += font_full_width;
 	}
-}
-
-int numberOfSetBits(uint32_t i)
-{
-     // Java: use int, and use >>> instead of >>. Or use Integer.bitCount()
-     // C or C++: use uint32_t
-     i = i - ((i >> 1) & 0x55555555);        // add pairs of bits
-     i = (i & 0x33333333) + ((i >> 2) & 0x33333333);  // quads
-     i = (i + (i >> 4)) & 0x0F0F0F0F;        // groups of 8
-     i *= 0x01010101;                        // horizontal sum of bytes
-     return  i >> 24;               // return just that top byte (after truncating to 32-bit even when int is wider than uint32_t)
 }
 
 void clear_console(){
