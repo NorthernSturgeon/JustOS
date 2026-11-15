@@ -61,7 +61,7 @@ static inline size_t div_up(size_t a, size_t b) { return (a+b-1)/b; }
 #define PTZONEMEM(desc) ((desc->Type==EfiBootServicesData)||(desc->Type==EfiBootServicesCode)||(desc->Type==EfiConventionalMemory))
 
 //                     6448403224160800
-#define PTENTRY_MASK 0x0000fffffffff000ull
+#define PTENTRY_MASK 0x00007ffffffff000ull
 
 #define DFLT_PTE_ATTR 3 // WRITE | PRESENT
 #define GET_PTE(addr) ((page_entry_t*)(((UINT64)(addr))&PTENTRY_MASK))

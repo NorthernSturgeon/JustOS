@@ -10,6 +10,7 @@
 #include "physmem.h"
 #include "lib/arena.h"
 #include "lib/console.h"
+#include "lib/crc32.h"
 
 static size_t to_pages(size_t bytes){
 	return (bytes>>12) + (bytes&0xfff ? 1 : 0);
@@ -26,7 +27,7 @@ __export void init_malloc(void* max_address){
 	if (size_table) return;
 
 	size_t st_size = to_pages((size_t)max_address >> 9);
-	size_table = allocate_pages(st_size);
+	size_table = phys_to_virt(allocate_pages(st_size));
 
 	printf("klib: size table %p, %u pages, %u kB\n", size_table, st_size, st_size << 2);
 
@@ -37,6 +38,8 @@ __export void init_malloc(void* max_address){
 	}
 
 	size_table[ST_IDX(size_table)] = st_size;
+
+	if (init_crc32) init_crc32();
 }
 
 __export void free(void* ptr){
@@ -45,7 +48,7 @@ __export void free(void* ptr){
 	size_t size = size_table[ST_IDX(ptr)];
 	if (!size) return; //TODO: panic
 
-	if ((intptr_t)size > 0) free_pages(ptr, size); //size
+	if ((intptr_t)size > 0) free_pages(virt_to_phys(ptr), size); //size
 	else arena_free((AllocatorArena*)size, ptr); //virtual address
 }
 
@@ -58,5 +61,5 @@ __export void* malloc(size_t size){
 
     if (ptr) size_table[ST_IDX(ptr)] = size;
 
-    return ptr;
+    return phys_to_virt(ptr);
 }

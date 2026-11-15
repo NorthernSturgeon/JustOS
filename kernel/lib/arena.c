@@ -165,7 +165,7 @@ static void mark_busy(AllocatorArena *arena, alist_t start, alist_t end){
 }
 */
 static AllocatorArena* create_arena(){
-	AllocatorArena *new_arena = allocate_pages(ARENA_SIZE/PAGE_SIZE);
+	AllocatorArena *new_arena = phys_to_virt(allocate_pages(ARENA_SIZE/PAGE_SIZE));
 	log_debug("create_arena: %p old_cnt=%u\n", new_arena, cpu_arenas_cnt);
 	if (!new_arena) return NULL;
 
@@ -207,7 +207,7 @@ static void destroy_arena(AllocatorArena* arena, AllocatorArena* prev){
 		size_table[ST_IDX(((void*)arena) + i)] = 0;
 	}
 
-	free_pages(arena, ARENA_SIZE/PAGE_SIZE);
+	free_pages(virt_to_phys(arena), ARENA_SIZE/PAGE_SIZE);
 }
 
 static AllocatorArena** merge(AllocatorArena* left, AllocatorArena* right, AllocatorArena** target){

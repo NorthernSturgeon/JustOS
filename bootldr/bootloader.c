@@ -293,13 +293,14 @@ static VOID convert_mmap_to_e820(boot_info_t *boot_info, EFI_MEMORY_DESCRIPTOR *
 /**
  Create virtual-to-physical memory mapping for a virtual address in the paging tables
 */
-static VOID alloc_page(boot_info_t *boot_info, virt_addr_t vaddr, UINT64 *free_ptzonesz, UINT16 pml4offset, uint64_t attr){
+static VOID alloc_page(boot_info_t *boot_info, virt_addr_t vaddr, UINT64 *free_ptzonesz, BOOLEAN virtual, uint64_t attr){
 	page_entry_t *cur_pt, *prev_pt;
-	cur_pt = GET_PTE(boot_info->ptzone[vaddr.f.pml4+pml4offset].value); //get pdt from pml4
+	if (virtual) vaddr.addr = (UINT64)CONV_PTR(vaddr.addr);
+	cur_pt = GET_PTE(boot_info->ptzone[vaddr.f.pml4].value); //get pdt from pml4
 	if (cur_pt == NULL) {
 		//pdt doesn't exists
 		cur_pt = boot_info->ptzone + (boot_info->ptzone_size - (*free_ptzonesz)--)*512; //create pdt
-		boot_info->ptzone[vaddr.f.pml4+pml4offset].value = SET_PTE(cur_pt, DFLT_PTE_ATTR); //set pdt in pml4
+		boot_info->ptzone[vaddr.f.pml4].value = SET_PTE(cur_pt, DFLT_PTE_ATTR); //set pdt in pml4
 	}
 	prev_pt = cur_pt; //save current pdt
 	cur_pt = GET_PTE(cur_pt[vaddr.f.pdt].value); //get pd in pdt
@@ -315,6 +316,7 @@ static VOID alloc_page(boot_info_t *boot_info, virt_addr_t vaddr, UINT64 *free_p
 		cur_pt = boot_info->ptzone + (boot_info->ptzone_size - (*free_ptzonesz)--)*512; //create pt
 		prev_pt[vaddr.f.pd].value = SET_PTE(cur_pt, DFLT_PTE_ATTR); //set pt in pd
 	}
+	// TODO: virt_to_phys(vaddr.addr)
 	cur_pt[vaddr.f.pt].value = SET_PTE(vaddr.addr, attr); //set page in pt
 }
 
@@ -334,16 +336,16 @@ static VOID setup_paging(boot_info_t *boot_info, EFI_MEMORY_DESCRIPTOR *mmap, UI
 	printf("1st startkernel page: %p\r\n", vaddr.addr);
 	printf("2nd startkernel page: %p\r\n", vaddr.addr+4096);
 	
-	alloc_page(boot_info, vaddr, &free_ptzonesz, 0, 3);
+	alloc_page(boot_info, vaddr, &free_ptzonesz, FALSE, 3);
 	vaddr.addr += 4096;
-	alloc_page(boot_info, vaddr, &free_ptzonesz, 0, 3);
+	alloc_page(boot_info, vaddr, &free_ptzonesz, FALSE, 3);
 	
 	for (
 		vaddr.addr = (UINT64)boot_info->vram;
 		vaddr.addr < (UINT64)boot_info->vram + boot_info->vram_size;
 		vaddr.addr += 4096
 	){
-		alloc_page(boot_info, vaddr, &free_ptzonesz, 256, 3);
+		alloc_page(boot_info, vaddr, &free_ptzonesz, TRUE, 3);
 	}
 
 	for(cur_entry=0;cur_entry<num_entries;cur_entry++){
@@ -357,7 +359,7 @@ static VOID setup_paging(boot_info_t *boot_info, EFI_MEMORY_DESCRIPTOR *mmap, UI
 
 		for (vaddr.addr=desc->PhysicalStart; vaddr.addr < desc->NumberOfPages*4096+desc->PhysicalStart; vaddr.addr+=4096){
 			if (free_ptzonesz <= 3) goto error; //paging setup failed due to insufficient memory
-			alloc_page(boot_info, vaddr, &free_ptzonesz, 256, pte_flags);
+			alloc_page(boot_info, vaddr, &free_ptzonesz, TRUE, pte_flags);
 		}
 	}
 
@@ -378,7 +380,7 @@ static VOID setup_acpi(boot_info_t *boot_info){
 	for (UINTN i = 0;i < ST->NumberOfTableEntries;i++){
 		if (CompareGuid(&conf_tb[i].VendorGuid,&acpi1_guid) == 0 || \
 CompareGuid(&conf_tb[i].VendorGuid,&acpi2_guid) == 0){
-			boot_info->acpi_rdsp = CONV_PTR(conf_tb[i].VendorTable);
+			boot_info->acpi_rdsp = conf_tb[i].VendorTable;
 			break;
 		}
 	}
@@ -397,7 +399,7 @@ static VOID load_splash(boot_info_t *boot_info, CHAR8* tsv, EFI_FILE_HANDLE root
 	//Print(L"%s \n", tmp);
 
 	boot_info->splash_size = ReadFile(root, tmp, &boot_info->splash, 0);
-	boot_info->splash = CONV_PTR(boot_info->splash);
+	boot_info->splash = boot_info->splash;
 
 	FreePool(tmp);
 }
@@ -627,6 +629,8 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 	boot_info->vram = CONV_PTR(boot_info->vram);
 	boot_info->ptzone = CONV_PTR(boot_info->ptzone);
 	boot_info->stack = CONV_PTR(boot_info->stack);
+	boot_info->splash = CONV_PTR(boot_info->splash);
+	boot_info->acpi_rdsp = CONV_PTR(boot_info->acpi_rdsp);
 
 	printf("We are ready to start!\r\n");
 	#ifdef DEBUG

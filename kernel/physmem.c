@@ -297,8 +297,8 @@ void init_mm(){
 
 	for (uint64_t i = 0; i < e820_len; i++){
 		if (e820[i].type == E820_TYPE_USABLE){
-			gorl.list[gorl_size++] = (uint64_t)phys_to_virt(e820[i].base);
-			gorl.list[gorl_size++] = (uint64_t)phys_to_virt(e820[i].base) + e820[i].lenght;
+			gorl.list[gorl_size++] = e820[i].base;
+			gorl.list[gorl_size++] = e820[i].base + e820[i].lenght;
 		}
 	}
 
@@ -306,20 +306,20 @@ void init_mm(){
 
 	size_t total = (size_t)&gorl.list[gorl.lenght] - (size_t)boot_info->ptzone;
 
-	mark_busy(phys_to_virt(NULL), 1u<<20); // first megabyte
-	mark_busy(boot_info->ptzone, round_to(total, 4096)); // page tables and after
+	mark_busy(NULL, 1u<<20); // first megabyte
+	mark_busy(virt_to_phys(boot_info->ptzone), round_to(total, 4096)); // page tables and after
 
 	printf("init_mm: file_table %p count %u\n", boot_info->files, boot_info->files_cnt);
-	mark_busy(boot_info->files, round_to(boot_info->files_cnt*sizeof(loaded_file), 4096));
+	mark_busy(virt_to_phys(boot_info->files), round_to(boot_info->files_cnt*sizeof(loaded_file), 4096));
 	for (size_t i = 0; i < boot_info->files_cnt; i++){
 		loaded_file *file = &boot_info->files[i];
 		printf("init_mm: file %s @ %p / %u b, TLS@%p / %u b\n", file->name, file->data, file->size, file->tls_area, file->tls_size);
-		mark_busy(file->data, round_to(file->size, 4096));
-		if (file->tls_area)	mark_busy(file->tls_area, round_to(file->tls_size, 4096));
+		mark_busy(virt_to_phys(file->data), round_to(file->size, 4096));
+		if (file->tls_area)	mark_busy(virt_to_phys(file->tls_area), round_to(file->tls_size, 4096));
 	}
 
-	mark_busy(boot_info->stack, boot_info->stack_size); // kernel stack
-	if (boot_info->splash) mark_busy(boot_info->splash, round_to(boot_info->splash_size, 4096));
+	mark_busy(virt_to_phys(boot_info->stack), boot_info->stack_size); // kernel stack
+	if (boot_info->splash) mark_busy(virt_to_phys(boot_info->splash), round_to(boot_info->splash_size, 4096));
 
 	init_malloc(virt_to_phys(gorl.list[gorl.lenght-1]));
 }

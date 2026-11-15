@@ -18,8 +18,6 @@
 #include "tsv.h"
 #include <alloca.h>
 
-#define USE_ALLOCA
-
 static EFI_FILE_HANDLE dl_workdir;
 static hashtab_t global_exports;
 static hashtab_t loaded_libs;
@@ -34,11 +32,13 @@ void dl_init(EFI_FILE_HANDLE workdir){
 
 static void parse_exports(hashtab_t *const ctx, libid_t *lib){
 	for (size_t i = 0; i < lib->symcnt; i++){
-		if (lib->dynsym[i].st_shndx != STN_UNDEF && lib->dynsym[i].st_value != 0 && ELF64_ST_BIND(lib->dynsym[i].st_info) == STB_GLOBAL){
-			symbol_t sym = {
-				.addr = (uint64_t)CONV_PTR(lib->image + lib->dynsym[i].st_value)
-			};
-			ht_insert(ctx, &lib->dynstr[lib->dynsym[i].st_name], &sym);
+		if (lib->dynsym[i].st_shndx != STN_UNDEF && lib->dynsym[i].st_value != 0 && ELF64_ST_BIND(lib->dynsym[i].st_info) != STB_LOCAL){
+			if (!ht_read(ctx, &lib->dynstr[lib->dynsym[i].st_name])){
+				symbol_t sym = {
+					.addr = (uint64_t)(lib->image + lib->dynsym[i].st_value)
+				};
+				ht_insert(ctx, &lib->dynstr[lib->dynsym[i].st_name], &sym);
+			}
 		}
 	}
 }
@@ -57,6 +57,21 @@ static libid_weakptr get_file(hashtab_t *const ctx, char* path){
 	//Print(L"image: %p\n", nl.image);
 
 	if (!nl.image || check_elf(nl.image)) goto fail;
+
+	Elf64_Shdr *bss = get_section_by_name(nl.image, ".bss");
+	size_t bss_size = bss ? bss->sh_size : 0;
+	if (bss_size){
+		void *image_with_bss;
+		if (ALLOC_KPAGES(&image_with_bss, TO_PAGES(nl.imagesize + bss_size)) == EFI_SUCCESS){
+			CopyMem(image_with_bss, nl.image, nl.imagesize);
+			ZeroMem(image_with_bss + bss->sh_offset, bss_size);
+			FileDestructor(nl.image, nl.imagesize);
+			nl.image = image_with_bss;
+			nl.imagesize += bss_size;
+		} else {
+			goto fail;
+		}
+	}
 
 	nl.dynamic = get_dyn(nl.image);
 	if (!nl.dynamic) goto fail;
@@ -81,9 +96,8 @@ static libid_weakptr get_file(hashtab_t *const ctx, char* path){
 	if (percpu){
 		nl.tls_size = percpu->p_memsz;
 		if (EFI_ERROR(ALLOC_KPAGES(&nl.tls_area, nl.tls_size))) goto fail;
-		ZeroMem(nl.tls_area, nl.tls_size); // for .tbss
+		ZeroMem(nl.tls_area + percpu->p_filesz, percpu->p_memsz - percpu->p_filesz); // for .tbss
 		CopyMem(nl.tls_area, nl.image + percpu->p_offset, percpu->p_filesz); // copy .tdata
-		*(uint64_t*)(nl.image + 0x0ff8) = (uint64_t)CONV_PTR(nl.tls_area);
 	}
 
 	foreach_needed(nl.dynamic, 
@@ -93,7 +107,7 @@ static libid_weakptr get_file(hashtab_t *const ctx, char* path){
 	nl.soname = NULL;
 	for (Elf64_Dyn *c = nl.dynamic; c->d_tag != DT_NULL; c++) {
 		if (c->d_tag == DT_SONAME) {
-			nl.soname = CONV_PTR(&nl.dynstr[c->d_un.d_val]);
+			nl.soname = &nl.dynstr[c->d_un.d_val];
 			break;
 		}
 	}
@@ -142,12 +156,12 @@ static void resolve(hashtab_t *const ctx, libid_t *lib){
 
 				symbol_t *target = ht_read(ctx, symname);
 				if (!target && ctx != &global_exports) target = ht_read(&global_exports, symname);
-				if (!target){
+				if (!target && ELF64_ST_BIND(lib->dynsym[ELF64_R_SYM(lib->rela[i].r_info)].st_info) == STB_GLOBAL){
 					CHAR16* err_name = makechar16(symname);
 					Print(L"Unable to found symbol: %s\n", err_name);
 					Fatality(LDR_ELF, 24);
 				}
-				*(uint64_t*)got_entry = target->addr + lib->rela[i].r_addend;
+				*(uint64_t*)got_entry = (target ? (uint64_t)CONV_PTR(target->addr) : 0) + lib->rela[i].r_addend;
 
 				break;
 			case R_X86_64_NONE:
@@ -159,7 +173,6 @@ static void resolve(hashtab_t *const ctx, libid_t *lib){
 				break;
 			default:
 				Fatality(LDR_ELF, ELF64_R_TYPE(lib->rela[i].r_info));
-				//break;
 		}
 	}
 	lib->neededcnt = SIZE_MAX; //resolved
@@ -168,15 +181,16 @@ static void resolve(hashtab_t *const ctx, libid_t *lib){
 		// no more insertions to loaded_libs
 		resolve(ctx, ht_read(&loaded_libs, &lib->dynstr[c->d_un.d_val]));
 	)
+
+	if (lib->ctx && ctx != &global_exports){
+		ht_destroy(ctx);
+		FreePool(ctx);
+	}
 }
 
 libid_weakptr dl_process(char *path, const BOOLEAN global_f){
-#ifndef USE_ALLOCA
-	hashtab_t local;
-	hashtab_t *const ctx = global_f ? &global_exports : &local;
-#else
-	hashtab_t *const ctx = global_f ? &global_exports : alloca(sizeof(hashtab_t));
-#endif
+	hashtab_t *const ctx = global_f ? &global_exports : AllocatePool(sizeof(hashtab_t));
+
 	// init ctx if local
 	if (!global_f) ht_init(ctx, sizeof(symbol_t), 8);
 
@@ -185,33 +199,37 @@ libid_weakptr dl_process(char *path, const BOOLEAN global_f){
 	if (!module) Fatality(LDR_MEM, 2);
 
 	setup_namespace(ctx, module);
-	resolve(ctx, get_file(ctx, path));
 
 	module = get_file(ctx, path);
+	module->ctx = ctx;
 
-	// destroy ctx if local
-	if (!global_f) ht_destroy(ctx);
 	return module;
 }
 
 void dl_fini(loaded_file **files, size_t *files_cnt){
-	ht_destroy(&global_exports);
-
 	*files_cnt = 0;
 	if (ALLOC_KPAGES(files, TO_PAGES(loaded_libs.entries*sizeof(loaded_file))) == EFI_SUCCESS){
 		for (size_t i = 0; i < loaded_libs.capacity; i++){
 			ht_entry_t* ent = ht_index(&loaded_libs, i);
 			if (ent->key){
 				libid_t *lib = (libid_t*)((uint8_t*)ent + sizeof(ht_entry_t));
-				loaded_file *file = *files + (*files_cnt)++;
+				if (lib->ctx) resolve(lib->ctx, lib);
 
-				file->name = lib->soname;
+				loaded_file *file = *files + (*files_cnt)++;
+				file->name = lib->soname ? CONV_PTR(lib->soname) : NULL;
 				file->data = CONV_PTR(lib->image);
 				file->size = lib->imagesize;
-				file->tls_area = lib->tls_area ? CONV_PTR(lib->tls_area) : NULL;
-				file->tls_size = lib->tls_size;
+
+				if (lib->tls_area){
+					file->tls_area = CONV_PTR(lib->tls_area);
+					file->tls_size = lib->tls_size;
+					*(uint64_t*)(lib->image + 0x0ff8) = (uint64_t)file->tls_area;
+				} else {
+					file->tls_area = NULL;
+				}
 			}
 		}
+		ht_destroy(&global_exports);
 	} else {
 		Fatality(LDR_MEM, 44);
 	}

@@ -10,6 +10,7 @@
 #ifndef __CRC32_H__
 #define __CRC32_H__
 
-extern uint32_t crc32(const uint32_t *buf, size_t len);
+extern __attribute__((weak)) void init_crc32();
+extern uint32_t crc32(const uint8_t *buf, size_t len);
 
 #endif

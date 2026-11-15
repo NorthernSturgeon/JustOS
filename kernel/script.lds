@@ -15,7 +15,7 @@ SECTIONS{
 	.text ALIGN(4096):{
 		*(.text)
 	}
-	.data ALIGN(4096):{ *(.data) *(.bss)}
+	.data ALIGN(4096):{ *(.data)}
 
 	/DISCARD/ :{
 		*(.comment)

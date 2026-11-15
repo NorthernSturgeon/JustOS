@@ -15,6 +15,7 @@
  */
 
 #include "elf.h"
+#include "hashtab.h"
 
 typedef struct{
 	uint64_t addr;
@@ -34,6 +35,7 @@ typedef struct{
 	void* tls_area;
 	size_t tls_size;
 	char *soname;
+	hashtab_t *ctx;
 } libid_t;
 
 typedef struct __attribute__((__packed__)){

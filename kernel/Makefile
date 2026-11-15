@@ -11,8 +11,7 @@ include ../local.env
 
 LIBC_SOURCES := lib/mem.S lib/atomic.S lib/memory.c \
 				lib/console.c lib/font.c lib/arena.c \
-				lib/string.c
-# lib/crc32.c 
+				lib/string.c lib/crc32.c 
 
 KERNEL_SOURCES := header.S kernel.c isr.S video.c \
 				physmem.c isr_id.S interrupts.c
@@ -41,6 +40,8 @@ LIBC_OBJS := $(LIBC_OBJS:.S=.S.o)
 KERNEL_OBJS := $(addprefix $(OUT_DIR)/,$(KERNEL_SOURCES:.c=.c.o))
 KERNEL_OBJS := $(KERNEL_OBJS:.S=.S.o)
 
+OC_FLAGS := --remove-section=.hash --remove-section=.gnu.hash
+
 $(OUT_DIR)/lib.%.c.o: lib/%.c
 	@gcc $< $(LIBC_CFLAGS) -o $@
 
@@ -67,11 +68,13 @@ clear:
 lib: $(LIBC_OBJS)
 	@echo $(LIBC_OBJS)
 	@ld $(LIBC_OBJS) $(LIBC_LDFLAGS) -o $(OUT_DIR)/klibc.so
+	@objcopy $(OC_FLAGS) $(OUT_DIR)/klibc.so
 	@echo klibc.so compiled successfully!
 
 kernel: lib $(KERNEL_OBJS)
 	@echo $(KERNEL_OBJS)
 	@ld $(KERNEL_OBJS) $(KERNEL_LDFLAGS) -o $(OUT_DIR)/kernel.elf $(OUT_DIR)/klibc.so
+	@objcopy $(OC_FLAGS) $(OUT_DIR)/kernel.elf
 	@echo kernel.elf compiled successfully!
 
 vhdinstall:

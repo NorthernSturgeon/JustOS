@@ -8,7 +8,7 @@
  */
 
 #include "lib/console.h"
-#include "lib/font.h"
+#include "lib/crc32.h"
 #include "lib/memory.h"
 #include "boot.h"
 #include "video.h"
@@ -52,8 +52,10 @@ void render_logo(struct BmpHeader *logo_hdr){
 
 	for (uint32_t cy = 0; cy < logo_hdr->biheight; cy++){
 		for (uint32_t cx = 0; cx < logo_hdr->biwidth; cx++){
-			uint32_t color = (*(uint32_t*)(&bitmap[cy*scanline + cx*3])) >> 8;
-
+			uint32_t color;
+			__builtin_memcpy(&color, &bitmap[cy*scanline + cx*3], sizeof(uint32_t));
+			
+			color >>= 8;
 			color = ((color & 0x00FF0000u)) | ((color & 0x000000FFu) << 8) | ((color & 0x0000FF00u) >> 8);
 
 			draw_pixel(color, xc + cx, yc + (logo_hdr->biheight - cy));
@@ -128,7 +130,7 @@ void kmain(){
 	}
 	set_color(COLOR_WHITE, COLOR_BLACK);
 
-	idtr.base = allocate_pages(1);
+	idtr.base = phys_to_virt(allocate_pages(1));
 	idtr.limit = 4095;
 	for (uint16_t i = 0; i < 256; i++){
 		fill_idt(&idtr.base[i], (uint64_t)isr_start + i*7, 0x8, 0, INT_TYPE_INTERRUPT);
@@ -149,6 +151,9 @@ void kmain(){
 	struct BmpHeader *logo = boot_info->splash;
 	printf("offset %u width %u height %u bits %u\n", (uint64_t)logo->bfoffbits, (uint64_t)logo->biwidth, (uint64_t)logo->biheight, (uint64_t)logo->bibitcount);
 	render_logo(logo);
+
+	char* crc32_test = "123456789";
+	printf("crc32 test: %p\n", (uint64_t)crc32((uint8_t*)crc32_test, 9));
 
 	//for(;;);
 	asm_hlt();
